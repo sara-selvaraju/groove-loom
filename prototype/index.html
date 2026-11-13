@@ -1,0 +1,1239 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>
+/* reset supplied by the claude.ai artifact host when the prototype was published */
+:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;font:14px system-ui,-apple-system,"Segoe UI",sans-serif}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<title>Groove Loom</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Recursive:wght,CASL,MONO@300..900,0..1,0..1&display=swap">
+<style>
+/* Layout: one column on phones; on wide screens the cloth and transport sit left, conversation and layers right. */
+:root{
+  --bg:#ECEFF5; --surface:#FFFFFF; --sunk:#E2E7F0; --ink:#151A25; --muted:#5A6377; --line:#D2D8E3;
+  --accent:#2A55D9; --accent-ink:#FFFFFF; --warn:#B23A1E; --warp:#C3CAD6; --warp2:#A9B3C4; --weft:#D9DEE7; --gap:#8C95A6; --shuttle:#A8743A;
+  --l0:#E0533D; --l1:#D98E0B; --l2:#2F9A52; --l3:#1693B0; --l4:#5468E8; --l5:#A052D4; --l6:#D4417F; --l7:#768A22;
+  --font-display:"Recursive", ui-rounded, system-ui, sans-serif;
+  --font-body:"Recursive", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono:"Recursive", ui-monospace, "SF Mono", Menlo, monospace;
+  --r:14px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0E121A; --surface:#161B26; --sunk:#1D2330; --ink:#E7EBF3; --muted:#98A1B6; --line:#2A3243;
+  --accent:#7D9BFF; --accent-ink:#0B1020; --warn:#FF8A6B; --warp:#3A4255; --warp2:#4C576E; --weft:#2D3444; --gap:#12161E; --shuttle:#C99459; color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#0E121A; --surface:#161B26; --sunk:#1D2330; --ink:#E7EBF3; --muted:#98A1B6; --line:#2A3243;
+  --accent:#7D9BFF; --accent-ink:#0B1020; --warn:#FF8A6B; --warp:#3A4255; --warp2:#4C576E; --weft:#2D3444; --gap:#12161E; --shuttle:#C99459; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.5;
+  font-variation-settings:"CASL" 0,"MONO" 0}
+.wrap{max-width:1120px;margin:0 auto;padding-block:20px 48px;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+header.top{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.brand{font-family:var(--font-display);font-size:clamp(28px,6vw,40px);font-weight:850;letter-spacing:-.02em;line-height:1;
+  font-variation-settings:"CASL" 1,"MONO" 0;margin:0}
+.brand span{color:var(--accent)}
+.tag{color:var(--muted);margin:0;font-size:14px}
+.grid{display:grid;gap:16px;grid-template-columns:1fr}
+@media (min-width:900px){.grid{grid-template-columns:minmax(0,440px) minmax(0,1fr);align-items:start}
+  .left{position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px)}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;min-width:0}
+.stack{display:flex;flex-direction:column;gap:16px;min-width:0}
+.label{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:650}
+.mono{font-family:var(--font-mono);font-variation-settings:"MONO" 1,"CASL" 0}
+.num{font-variant-numeric:tabular-nums}
+
+/* Cloth */
+.cloth-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:8px}
+.cloth-box{position:relative;width:100%;height:400px;border-radius:10px;overflow:hidden;background:var(--gap)}
+.cloth-box canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.tap-tags{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.tap-tag{position:absolute;left:0;top:0;transform-origin:0 50%;background:var(--surface);color:var(--ink);border-radius:999px;padding:2px 8px;font-size:11px;font-weight:600;white-space:nowrap;opacity:.94}
+.cloth-hint{position:absolute;left:50%;top:14px;transform:translateX(-50%);background:var(--surface);color:var(--ink);border:1px solid var(--line);
+  border-radius:999px;padding:6px 12px;font-size:13px;white-space:nowrap;pointer-events:none}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;justify-content:center;margin-top:8px;font-size:13px;color:var(--muted)}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:1px}
+
+/* Transport */
+.transport{display:grid;grid-template-columns:auto 1fr;gap:14px 16px;align-items:center;margin-top:14px}
+.play{width:64px;height:64px;border-radius:50%;border:0;background:var(--accent);color:var(--accent-ink);cursor:pointer;
+  display:grid;place-items:center;grid-row:span 2}
+.play svg{width:26px;height:26px;fill:currentColor}
+.play:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.ctl{display:flex;flex-direction:column;gap:2px;min-width:0}
+.ctl-row{display:flex;justify-content:space-between;gap:8px;font-size:13px}
+.ctl-row b{font-weight:650}
+.ctl-row output{color:var(--muted)}
+.keyrow{display:grid;grid-template-columns:1fr 1.4fr 1fr;gap:10px;grid-column:1/-1}
+select,input[type=range]{width:100%}
+select{font:inherit;font-size:14px;color:var(--ink);background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+input[type=range]{accent-color:var(--accent);height:24px;margin:0}
+.tools{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.btn{font:inherit;font-size:14px;font-weight:600;color:var(--ink);background:var(--sunk);border:1px solid var(--line);border-radius:999px;
+  padding:8px 14px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{border-color:var(--muted)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+
+/* Prompt */
+.ask{display:flex;flex-direction:column;gap:10px}
+.ask-row{display:flex;gap:8px;align-items:flex-end}
+textarea{flex:1;min-width:0;font:inherit;color:var(--ink);background:var(--sunk);border:1px solid var(--line);border-radius:12px;padding:10px 12px;resize:vertical;min-height:48px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{font:inherit;font-size:13px;color:var(--ink);background:transparent;border:1px dashed var(--line);border-radius:999px;padding:5px 11px;cursor:pointer}
+.chip:hover{border-style:solid;border-color:var(--accent)}
+.log{display:flex;flex-direction:column;gap:10px;max-height:260px;overflow-y:auto}
+.msg{font-size:14px;line-height:1.45;padding:10px 12px;border-radius:12px;max-width:92%}
+.msg.you{align-self:flex-end;background:var(--sunk)}
+.msg.loom{align-self:flex-start;background:transparent;border:1px solid var(--line)}
+.msg.err{border-color:var(--warn);color:var(--warn)}
+.msg .who{display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
+.note{font-size:13px;color:var(--muted);margin:0}
+
+/* Layers */
+.layers{display:flex;flex-direction:column;gap:10px}
+.layer{border:1px solid var(--line);border-radius:12px;padding:12px 12px 10px;background:var(--surface);min-width:0}
+.layer.off{opacity:.5}
+.lh{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.lh .sw{width:12px;height:12px;border-radius:50%;flex:none}
+.lh .nm{font-weight:700;font-size:15px;min-width:0;overflow-wrap:anywhere}
+.lh .in{font-size:12px;color:var(--muted)}
+.lh .sp{flex:1}
+.lh .btns{display:flex;gap:6px;flex:none;margin-left:auto}
+.tg{font:inherit;font-size:12px;font-weight:700;width:30px;height:28px;border-radius:8px;border:1px solid var(--line);background:var(--sunk);color:var(--ink);cursor:pointer}
+.tg[aria-pressed=true]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.about{font-size:13px;color:var(--muted);margin:6px 0 8px}
+.pat{font-size:12.5px;background:var(--sunk);border-radius:8px;padding:6px 8px;overflow-x:auto;white-space:nowrap;margin-bottom:8px}
+.knobs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px 12px}
+.knobs .ctl-row{font-size:12px}
+.empty{color:var(--muted);font-size:14px;padding:12px;border:1px dashed var(--line);border-radius:12px}
+
+details.code summary{cursor:pointer;font-weight:650}
+.credits{padding:0 4px}
+.credits a{color:inherit}
+pre.code{margin:10px 0 0;background:var(--sunk);border-radius:10px;padding:12px;overflow-x:auto;font-size:12.5px;line-height:1.55}
+pre.code .c{color:var(--muted)}
+.exp{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.exp select{width:auto}
+@media (prefers-reduced-motion: reduce){.dot{transition:none}}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <h1 class="brand">Groove<span>Loom</span></h1>
+    <p class="tag">Describe music in plain words. Watch its shape.</p>
+  </header>
+
+  <div class="grid">
+    <div class="left stack">
+      <section class="panel" aria-label="Your cloth and transport">
+        <div class="cloth-head"><span class="label">Your cloth</span><span class="note num" id="clothStat">0 bars woven</span></div>
+        <div class="cloth-box">
+          <canvas id="cloth" role="img" aria-label="Woven cloth: each band is one bar, each coloured thread is a layer, and the thread shows on the surface wherever that layer plays"></canvas>
+          <canvas id="tapestry" hidden role="img" aria-label="Tapestry on a loom: each band is one bar, each coloured thread is a layer, and the thread rises to the surface wherever that layer plays"></canvas>
+          <div class="tap-tags" id="tapTags" aria-hidden="true"></div>
+          <div class="cloth-hint" id="clothHint">Preview. Press play to start weaving.</div>
+        </div>
+        <div class="legend" id="legend"></div>
+
+        <div class="transport">
+          <button class="play" id="play" aria-label="Play">
+            <svg viewBox="0 0 24 24" id="playIcon"><path d="M7 4.5v15l13-7.5z"/></svg>
+          </button>
+          <div class="ctl">
+            <div class="ctl-row"><label for="tempo"><b>Tempo</b></label><output id="tempoOut" class="num">100 bpm</output></div>
+            <input type="range" id="tempo" min="60" max="180" step="1" value="100">
+          </div>
+          <div class="ctl">
+            <div class="ctl-row"><label for="swing"><b>Swing</b></label><output id="swingOut" class="num">straight</output></div>
+            <input type="range" id="swing" min="0" max="1" step="0.01" value="0">
+          </div>
+          <div class="keyrow">
+            <div class="ctl"><label class="label" for="key">Key</label><select id="key"></select></div>
+            <div class="ctl"><label class="label" for="scale">Scale</label><select id="scale"></select></div>
+            <div class="ctl"><label class="label" for="bars">Record</label>
+              <select id="bars"><option value="4">4 bars</option><option value="8" selected>8 bars</option><option value="16">16 bars</option></select></div>
+          </div>
+        </div>
+        <div class="tools">
+          <button class="btn" id="undo" disabled>Undo</button>
+          <button class="btn" id="reset">Start over</button>
+          <button class="btn" id="record">Make MP3</button>
+          <button class="btn" id="saveCloth">Save cloth</button>
+        </div>
+        <p class="note" id="recNote" style="margin-top:8px"></p>
+      </section>
+    </div>
+
+    <div class="stack">
+      <section class="panel ask" aria-label="Describe your music">
+        <div class="label">Tell the loom what you want</div>
+        <div class="log" id="log" aria-live="polite"></div>
+        <form class="ask-row" id="askForm">
+          <textarea id="prompt" rows="2" placeholder="e.g. throw in a syncopated trumpet"></textarea>
+          <button class="btn primary" id="send" type="submit">Send</button>
+        </form>
+        <div class="chips" id="chips"></div>
+        <p class="note" id="aiNote"></p>
+      </section>
+
+      <section class="panel" aria-label="Layers">
+        <div class="ctl-row" style="margin-bottom:10px"><span class="label">Layers</span><span class="note" id="layerCount"></span></div>
+        <div class="layers" id="layers"></div>
+      </section>
+
+      <section class="panel">
+        <details class="code" id="codeBox">
+          <summary>Under the hood: the Strudel code</summary>
+          <p class="note" style="margin-top:8px">The loom never runs code from the AI. The AI returns a description of the layers, the app checks it, and builds this pattern from it. This listing is generated from the same description, so it always matches what you hear.</p>
+          <pre class="code mono" id="code"></pre>
+        </details>
+      </section>
+      <p class="note credits">Sounds: drums from the <a href="https://github.com/sgossner/VCSL" target="_blank" rel="noopener">Versilian Community Sample Library</a> (CC0). Instruments from Fluid R3 GM by Frank Wen, via <a href="https://github.com/gleitz/midi-js-soundfonts" target="_blank" rel="noopener">midi-js-soundfonts</a> (<a href="https://creativecommons.org/licenses/by/3.0/" target="_blank" rel="noopener">CC BY 3.0</a>). Audio engine: <a href="https://strudel.cc" target="_blank" rel="noopener">Strudel</a> (AGPL-3.0).</p>
+    </div>
+  </div>
+</div>
+
+<script>
+// Strudel embeds its audio processors as data: URLs, which the page's security policy blocks.
+// The same processors are published next to this page, so redirect each load to its file.
+(() => {
+  if (!window.AudioWorklet) return;
+  const FILES = {"sample-generator":"sample-generator.js", "recorder":"recorder.js", "lfo-processor":"superdough-processors.js", "dough-processor":"dough-processor.js"};
+  const orig = AudioWorklet.prototype.addModule;
+  AudioWorklet.prototype.addModule = function(url, opts){
+    try {
+      if (typeof url === "string" && url.startsWith("data:text/javascript;base64,")) {
+        const m = /registerProcessor\("([^"]+)"/.exec(atob(url.slice(28)));
+        const f = m && FILES[m[1]];
+        if (f) url = new URL(f, document.baseURI).href;
+      }
+    } catch (e) { console.warn("worklet redirect failed", e); }
+    return orig.call(this, url, opts);
+  };
+})();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@strudel/web@1.3.0/dist/index.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lamejs@1.2.1/lame.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(() => {
+"use strict";
+const S = window.strudel;
+const $ = (id) => document.getElementById(id);
+
+/* ---------- Vocabulary the AI is allowed to use ---------- */
+const KEYS = ["C","C#","D","Eb","E","F","F#","G","Ab","A","Bb","B"];
+const SCALES = {
+  "major":"Major (bright)", "minor":"Minor (moody)", "dorian":"Dorian (soulful minor)", "mixolydian":"Mixolydian (bluesy major)",
+  "major pentatonic":"Major pentatonic", "minor pentatonic":"Minor pentatonic", "blues":"Blues", "harmonic minor":"Harmonic minor",
+  "phrygian":"Phrygian (dark, Spanish)", "lydian":"Lydian (dreamy)"
+};
+// Recorded drums: Versilian Community Sample Library (CC0). Recorded instruments: Fluid R3 GM (CC BY 3.0).
+// Both are published as files next to this page, under sounds/. Synth instruments need no files.
+const GM_NOTES = {"ebass":["A1","A2","A3","C1","C2","C3","C4","Eb1","Eb2","Eb3","Gb1","Gb2","Gb3"],"epiano":["A2","A3","A4","A5","C2","C3","C4","C5","C6","Eb2","Eb3","Eb4","Eb5","Gb2","Gb3","Gb4","Gb5"],"flute":["A4","A5","A6","C4","C5","C6","C7","Eb4","Eb5","Eb6","Gb4","Gb5","Gb6"],"guitar":["A2","A3","A4","A5","C3","C4","C5","C6","Eb2","Eb3","Eb4","Eb5","Gb2","Gb3","Gb4","Gb5"],"piano":["A2","A3","A4","A5","A6","C2","C3","C4","C5","C6","C7","Eb2","Eb3","Eb4","Eb5","Eb6","Gb2","Gb3","Gb4","Gb5","Gb6"],"sax":["A2","A3","A4","A5","C3","C4","C5","Eb3","Eb4","Eb5","Gb2","Gb3","Gb4","Gb5"],"strings":["A2","A3","A4","A5","C2","C3","C4","C5","C6","Eb2","Eb3","Eb4","Eb5","Eb6","Gb2","Gb3","Gb4","Gb5","Gb6"],"trumpet":["A3","A4","A5","C4","C5","C6","Eb3","Eb4","Eb5","Gb3","Gb4","Gb5"],"vibes":["A3","A4","A5","C4","C5","C6","Eb3","Eb4","Eb5","Eb6","Gb3","Gb4","Gb5","Gb6"]};
+const DRUM = (file, label, gain, extra) => ({label, kind:"drum", sound:file, sample:[`drums/${file}.wav`], gain, params:extra || [], rec:true});
+const TONE = (sound, label, octave, gain, params) => ({label, kind:"tone", sound, sample:"gm", octave, gain, params, rec:true});
+const INSTR = {
+  kick:       DRUM("kick", "Kick drum", 0.74),
+  snare:      DRUM("snare", "Snare drum", 0.56),
+  rim:        DRUM("rim", "Rim click", 0.61),
+  clap:       DRUM("clap", "Hand claps", 0.86),
+  hihat:      DRUM("hihat", "Closed hi-hat", 0.57, [["cut", 1]]),
+  openhat:    DRUM("openhat", "Open hi-hat", 0.36, [["cut", 1]]),
+  tom:        DRUM("tom", "Low tom", 0.67),
+  tomhi:      DRUM("tomhi", "High tom", 0.54),
+  shaker:     DRUM("shaker", "Shaker", 0.67),
+  tambourine: DRUM("tambourine", "Tambourine", 0.42),
+  crash:      DRUM("crash", "Crash cymbal", 0.73),
+  piano:   TONE("piano",   "Piano", 4, 4.0, [["release", 0.5]]),
+  keys:    TONE("epiano",  "Electric piano", 4, 1.24, [["release", 0.4]]),
+  bass:    TONE("ebass",   "Electric bass", 2, 1.86, [["release", 0.12]]),
+  guitar:  TONE("guitar",  "Nylon guitar", 3, 1.35, [["release", 0.4]]),
+  strings: TONE("strings", "Strings", 3, 2.26, [["attack", 0.15], ["release", 0.7]]),
+  trumpet: TONE("trumpet", "Trumpet", 4, 2.34, [["release", 0.15]]),
+  sax:     TONE("sax",     "Tenor sax", 3, 1.55, [["release", 0.2]]),
+  flute:   TONE("flute",   "Flute", 5, 1.34, [["attack", 0.03], ["release", 0.2]]),
+  vibes:   TONE("vibes",   "Vibraphone", 4, 2.67, [["release", 0.8]]),
+  // electronic sounds, made by synthesis
+  synthkick:  {label:"Electronic kick (synth)", kind:"drum", sound:"sbd", gain:1.0, params:[["decay",0.4]]},
+  synthsnare: {label:"Electronic snare (synth)", kind:"drum", sound:"white", gain:0.55, params:[["hpf",1500],["attack",0.001],["decay",0.14],["sustain",0]]},
+  synthhat:   {label:"Electronic hi-hat (synth)", kind:"drum", sound:"white", gain:0.32, params:[["hpf",8000],["attack",0.001],["decay",0.035],["sustain",0]]},
+  synthbass:  {label:"Synth bass", kind:"tone", sound:"sawtooth", octave:2, gain:0.55, params:[["attack",0.005],["decay",0.18],["sustain",0.5],["release",0.08]]},
+  subbass:    {label:"Sub bass (synth)", kind:"tone", sound:"sine", octave:2, gain:0.8, params:[["attack",0.01],["release",0.1]]},
+  pad:        {label:"Synth pad", kind:"tone", sound:"supersaw", octave:3, gain:0.28, params:[["attack",0.4],["sustain",0.8],["release",1.2]]},
+  lead:       {label:"Lead synth", kind:"tone", sound:"square", octave:4, gain:0.28, params:[["attack",0.01],["sustain",0.6],["release",0.15]]},
+  bell:       {label:"Synth bell", kind:"tone", sound:"sine", octave:5, gain:0.4, params:[["fm",3],["fmh",3.5],["attack",0.001],["decay",0.9],["sustain",0]]}
+};
+// names used by earlier versions of the page
+const INSTR_ALIASES = {brass:"trumpet", pluck:"guitar"};
+
+/* ---------- Recorded sounds: register with Strudel and fetch ahead of first use ---------- */
+const SOUND_BASE = new URL("sounds/", document.baseURI).href;
+function sampleMap(inst){
+  if (Array.isArray(inst.sample)) return inst.sample;
+  return Object.fromEntries((GM_NOTES[inst.sound] || []).map(n => [n, `${inst.sound}/${n}.mp3`]));
+}
+function registerSamples(){
+  const map = {};
+  for (const inst of Object.values(INSTR)) if (inst.sample) map[inst.sound] = sampleMap(inst);
+  return S.samples(map, SOUND_BASE);
+}
+const loading = new Map();   // url -> promise
+function preloadFor(p){
+  let ctx; try { ctx = S.getAudioContext(); } catch { return Promise.resolve(); }
+  const jobs = [];
+  for (const L of p.layers) {
+    const inst = INSTR[L.instrument]; if (!inst || !inst.sample) continue;
+    const m = sampleMap(inst);
+    for (const rel of (Array.isArray(m) ? m : Object.values(m))) {
+      const url = SOUND_BASE + rel;
+      if (!loading.has(url)) loading.set(url, Promise.resolve(S.loadBuffer(url, ctx, inst.sound)).catch(e => { loading.delete(url); console.warn("sample failed", url, e); }));
+      jobs.push(loading.get(url));
+    }
+  }
+  return Promise.all(jobs);
+}
+const LAYER_VARS = ["--l0","--l1","--l2","--l3","--l4","--l5","--l6","--l7"];
+const MAX_LAYERS = 8;
+
+/* ---------- Example starter (shown at load so the page is never empty) ---------- */
+const STARTER = {
+  tempo: 100, key: "A", scale: "minor", swing: 0,
+  layers: [
+    {id:"kick", name:"Kick", instrument:"kick", rhythm:{mode:"euclid",hits:4,steps:16,rotate:0}, volume:0.85, tone:0.5, space:0, about:"Four even hits in a bar of 16 steps: the classic four on the floor."},
+    {id:"snare", name:"Snare", instrument:"snare", rhythm:{mode:"steps",pattern:"~ x ~ x"}, volume:0.75, tone:0.5, space:0.15, about:"Lands on beats 2 and 4, the backbeat."},
+    {id:"hats", name:"Hi-hats", instrument:"hihat", rhythm:{mode:"steps",pattern:"[~ x]*4"}, volume:0.7, tone:0.5, space:0, about:"Off-beat eighths, filling the gaps between the kicks."},
+    {id:"bass", name:"Bass", instrument:"bass", notes:"<0 0 5 3>", rhythm:{mode:"euclid",hits:3,steps:8,rotate:0}, volume:0.8, tone:0.45, space:0, about:"3 hits spread over 8 steps (the tresillo). The note changes each bar."}
+  ]
+};
+
+/* ---------- State ---------- */
+let piece = load("gl.piece") || clone(STARTER);
+let log = load("gl.log") || [{who:"loom", text:"This is an example groove to start from. Press play, then tell me what to change, or press Start over for a blank slate."}];
+const undoStack = [];
+let playing = false, repl = null, compiled = null, sample = null, downloads = null, busy = false, recording = false;
+
+function clone(o){ return JSON.parse(JSON.stringify(o)); }
+function load(k){ try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : null; } catch { return null; } }
+function save(){ try { localStorage.setItem("gl.piece", JSON.stringify(piece)); localStorage.setItem("gl.log", JSON.stringify(log.slice(-30))); } catch {} }
+
+/* ---------- Validation: everything from the AI (or storage) passes through here ---------- */
+const NOTES_RE = /^[0-9\s~\[\]<>,.*!@\/_\-:?|()]{1,160}$/;
+const STEPS_RE = /^[x~\s\[\]<>*!@\/_.,()0-9?|]{1,160}$/;
+const clamp = (v, lo, hi, d) => { const n = Number(v); return Number.isFinite(n) ? Math.min(hi, Math.max(lo, n)) : d; };
+const cleanText = (v, n) => String(v ?? "").replace(/[\u0000-\u001f]/g, " ").slice(0, n);
+function parsesAsMini(str){ try { S.mini(str); return true; } catch { return false; } }
+
+function sanitizePiece(p, fallback){
+  if (!p || typeof p !== "object") return null;
+  const out = {
+    tempo: Math.round(clamp(p.tempo, 60, 180, fallback?.tempo ?? 100)),
+    key: KEYS.includes(p.key) ? p.key : (fallback?.key ?? "C"),
+    scale: SCALES[p.scale] ? p.scale : (fallback?.scale ?? "minor"),
+    swing: clamp(p.swing, 0, 1, 0),
+    layers: []
+  };
+  const ids = new Set();
+  for (let raw of Array.isArray(p.layers) ? p.layers : []) {
+    if (out.layers.length >= MAX_LAYERS) break;
+    if (raw && INSTR_ALIASES[raw.instrument]) raw = {...raw, instrument: INSTR_ALIASES[raw.instrument]};
+    if (!raw || !INSTR[raw.instrument]) continue;
+    const inst = INSTR[raw.instrument];
+    let id = cleanText(raw.id, 24).replace(/[^a-z0-9_-]/gi, "") || raw.instrument;
+    while (ids.has(id)) id += "_";
+    ids.add(id);
+    const L = {
+      id, instrument: raw.instrument,
+      name: cleanText(raw.name, 28) || inst.label,
+      about: cleanText(raw.about, 180),
+      volume: clamp(raw.volume, 0, 1, 0.8), tone: clamp(raw.tone, 0, 1, 0.6), space: clamp(raw.space, 0, 1, 0.1),
+      octave: Math.round(clamp(raw.octave, -2, 2, 0)),
+      muted: !!raw.muted, solo: !!raw.solo
+    };
+    const r = raw.rhythm;
+    if (r && r.mode === "euclid") {
+      const steps = Math.round(clamp(r.steps, 1, 32, 8));
+      L.rhythm = {mode:"euclid", steps, hits: Math.round(clamp(r.hits, 0, steps, Math.min(3, steps))), rotate: Math.round(clamp(r.rotate, 0, steps - 1, 0))};
+    } else if (r && r.mode === "steps" && typeof r.pattern === "string" && STEPS_RE.test(r.pattern) && r.pattern.includes("x") && parsesAsMini(r.pattern)) {
+      L.rhythm = {mode:"steps", pattern: r.pattern.trim()};
+    } else L.rhythm = null;
+    if (inst.kind === "tone") {
+      const notes = typeof raw.notes === "string" ? raw.notes.trim() : "";
+      L.notes = NOTES_RE.test(notes) && parsesAsMini(notes) ? notes : "0";
+    } else if (!L.rhythm) {
+      L.rhythm = {mode:"euclid", hits:4, steps:16, rotate:0};
+    }
+    out.layers.push(L);
+  }
+  return out;
+}
+
+/* ---------- Compiler: description -> Strudel calls (one list feeds both the sound and the code view) ---------- */
+const r3 = (x) => Math.round(x * 1000) / 1000;
+const toneHz = (t) => Math.round(t >= 0.5 ? 6000 * Math.pow(20000 / 6000, (t - 0.5) / 0.5) : 300 * Math.pow(20, t / 0.5));
+function rhythmMini(r){
+  if (!r) return null;
+  if (r.mode === "euclid") return r.hits === 0 ? "~" : (r.rotate ? `x(${r.hits},${r.steps},${r.rotate})` : `x(${r.hits},${r.steps})`);
+  return r.pattern;
+}
+function layerCalls(L, p){
+  const inst = INSTR[L.instrument];
+  const rhythm = rhythmMini(L.rhythm);
+  const calls = [];
+  let head;
+  if (inst.kind === "drum") {
+    head = ["s", [inst.sound]];
+    if (rhythm) calls.push(["struct", [rhythm]]);
+  } else {
+    head = ["n", [L.notes]];
+    if (rhythm) calls.push(["struct", [rhythm]]);
+    calls.push(["scale", [`${p.key}${inst.octave + (L.octave || 0)}:${p.scale}`]]);
+    calls.push(["s", [inst.sound]]);
+  }
+  for (const c of inst.params) calls.push([c[0], [c[1]]]);
+  if (toneHz(L.tone) < 19000) calls.push(["lpf", [toneHz(L.tone)]]);
+  if (L.space > 0.02) calls.push(["room", [r3(L.space * 0.9)]]);
+  calls.push(["gain", [r3(L.volume * inst.gain)]]);
+  return {head, calls};
+}
+function swingArgs(p){ return p.swing > 0.01 ? [r3(p.swing / 3), 8] : null; }
+function applyCalls({head, calls}, swing){
+  let pat = S[head[0]](...head[1]);
+  for (const [m, args] of calls) if (typeof pat[m] === "function") pat = pat[m](...args);
+  if (swing) pat = pat.swingBy(...swing);
+  return pat;
+}
+function audible(p){
+  const solo = p.layers.some(l => l.solo && !l.muted);
+  return p.layers.map(l => !l.muted && (!solo || l.solo));
+}
+function compile(p){
+  const sw = swingArgs(p), on = audible(p);
+  const perLayer = p.layers.map((L) => { try { return applyCalls(layerCalls(L, p), sw); } catch (e) { console.warn("layer failed", L.id, e); return null; } });
+  const live = perLayer.filter((pat, i) => pat && on[i]);
+  const pattern = live.length ? S.stack(...live) : S.silence;
+  return {pattern, perLayer, cps: p.tempo / 240};
+}
+const fmtArg = (a) => typeof a === "string" ? JSON.stringify(a) : String(a);
+function codeFor(p){
+  const sw = swingArgs(p), on = audible(p);
+  const lines = [`// ${p.tempo} bpm in ${p.key} ${p.scale}. One cycle = one bar of 4 beats.`];
+  if (p.layers.some(L => INSTR[L.instrument]?.rec)) lines.push(`// Recorded sounds such as s("${p.layers.map(L => INSTR[L.instrument]).find(i => i?.rec).sound}") are loaded with samples() from files published with this page.`);
+  lines.push(`setcpm(${r3(p.tempo / 4)})`, ``, `stack(`);
+  p.layers.forEach((L, i) => {
+    const {head, calls} = layerCalls(L, p);
+    let s = `${head[0]}(${head[1].map(fmtArg).join(", ")})` + calls.map(([m, a]) => `.${m}(${a.map(fmtArg).join(", ")})`).join("");
+    lines.push(`  // ${L.name}${on[i] ? "" : " (muted)"}`);
+    lines.push(`  ${on[i] ? "" : "// "}${s},`);
+  });
+  lines.push(sw ? `).swingBy(${sw[0]}, ${sw[1]})` : `)`);
+  return lines.join("\n");
+}
+
+/* ---------- Render ---------- */
+/* Cloth: each bar weaves one band; each layer is a thread that rises to the surface (a "float") while it sounds */
+const COLS = 96;                       // 96 warp threads per bar: divides evenly by 16ths and by triplets
+const rows = [];                       // woven bars, newest first
+let curRow = null, curCycle = -1;
+const cv = $("cloth"), cx = cv.getContext("2d");
+let dpr = 1;
+function fitCanvas(){ dpr = Math.min(2, window.devicePixelRatio || 1); cv.width = Math.round(cv.clientWidth * dpr); cv.height = Math.round(cv.clientHeight * dpr); drawCloth(); }
+new ResizeObserver(fitCanvas).observe(cv);
+function tokens(){
+  const cs = getComputedStyle(document.documentElement), g = (n) => cs.getPropertyValue(n).trim();
+  const t = {warp:g("--warp"), warp2:g("--warp2"), weft:g("--weft"), gap:g("--gap"), shuttle:g("--shuttle"), ink:g("--ink"), surface:g("--surface"), muted:g("--muted"), layers:LAYER_VARS.map(g)}; t.key = t.warp + t.weft + t.layers.join(""); return t;
+}
+function hexRgb(h){ h = h.replace("#", ""); if (h.length === 3) h = h.split("").map(c => c + c).join(""); const n = parseInt(h, 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; }
+function mix(h1, h2, t){ const a = hexRgb(h1), b = hexRgb(h2); return "#" + a.map((v, i) => Math.round(v + (b[i] - v) * t).toString(16).padStart(2, "0")).join(""); }
+function midiOf(v){
+  const x = v && (v.note ?? v.n);
+  if (typeof x === "number") return x;
+  if (typeof x === "string" && S.noteToMidi) { try { return S.noteToMidi(x); } catch {} }
+  return null;
+}
+function sigOf(p){ return {g:`${p.tempo}|${p.key}|${p.scale}|${Math.round(p.swing * 20)}`, l:Object.fromEntries(p.layers.map(L => [L.id, {name:L.name, s:JSON.stringify([L.instrument, L.notes, L.rhythm, L.muted, L.solo, L.octave])}]))}; }
+function diffTags(prev, cur){
+  if (!prev) return ["first bar"];
+  const tags = [];
+  for (const id in cur.l) { if (!prev.l[id]) tags.push("+ " + cur.l[id].name); else if (prev.l[id].s !== cur.l[id].s) tags.push("~ " + cur.l[id].name); }
+  for (const id in prev.l) if (!cur.l[id]) tags.push("− " + prev.l[id].name);
+  if (prev.g !== cur.g) { const [t0, k0, s0] = prev.g.split("|"), [t1, k1, s1] = cur.g.split("|"); if (k0 !== k1 || s0 !== s1) tags.push(`${k1} ${s1}`); else if (t0 !== t1) tags.push(`${t1} bpm`); else tags.push("swing"); }
+  return tags.slice(0, 3);
+}
+function makeRow(cycle, prevSig){
+  const on = audible(piece), sig = sigOf(piece);
+  const picks = piece.layers.map((L, i) => {
+    const pat = compiled?.perLayer[i]; let segs = [];
+    const drum = INSTR[L.instrument].kind === "drum";
+    if (pat && on[i]) {
+      try {
+        for (const h of pat.queryArc(cycle, cycle + 1)) {
+          const b = h.part.begin.valueOf() - cycle, e = h.part.end.valueOf() - cycle;
+          const c0 = Math.max(0, Math.floor(b * COLS + 1e-6));
+          let c1 = Math.min(COLS, Math.max(c0 + 1, Math.round(e * COLS)));
+          if (drum) c1 = Math.min(c1, c0 + 4);          // drum hits are short: a short float
+          segs.push({c0, c1, m: midiOf(h.value)});
+        }
+      } catch {}
+      // higher notes are woven in a paler shade of the thread, on one scale for every bar
+      for (const s of segs) s.lift = s.m == null ? 0.1 : Math.min(1, Math.max(0, (s.m - 28) / 60));
+    }
+    return {ci: i % 8, segs, muted: !on[i]};
+  });
+  return {cycle, picks, sig, tags: diffTags(prevSig, sig)};
+}
+// Geometry of one bar: ground picks (plain cloth) alternate with one pattern pick per layer, like brocade.
+function pickList(row){ const out = [{g:true}]; row.picks.forEach((pk, k) => { out.push({k}); out.push({g:true}); }); if (!row.picks.length) out.push({g:true}); return out; }
+function pickH(colW, g){ return g ? colW * 0.8 : colW * 1.5; }
+function bandH(row, colW){ return pickList(row).reduce((h, p) => h + pickH(colW, p.g), 0); }
+function rnd(a, b){ let h = (a * 374761393 + b * 668265263) ^ 0x5bf03635; h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) / 4294967296; }
+function shade(hex, f){ return mix(hex, f > 0 ? "#ffffff" : "#000000", Math.abs(f)); }
+let rowSeq = 0;
+function warpCell(ctx, x, y, w, h, c, T, seed){
+  const col = c % 24 === 0 ? T.warp2 : T.warp;
+  ctx.fillStyle = shade(col, (rnd(c, 7) - 0.5) * 0.08);
+  ctx.fillRect(x + w * 0.13, y, w * 0.74, h);
+  ctx.fillStyle = "rgba(255,255,255,.17)"; ctx.fillRect(x + w * 0.3, y, w * 0.16, h);
+  ctx.fillStyle = "rgba(0,0,0,.16)"; ctx.fillRect(x + w * 0.73, y, w * 0.14, h);
+}
+function weftCell(ctx, x, y, w, h, col, seed){
+  ctx.fillStyle = shade(col, (rnd(seed, 3) - 0.5) * 0.07);
+  ctx.fillRect(x - w * 0.04, y + h * 0.1, w * 1.08, h * 0.8);
+  ctx.fillStyle = "rgba(255,255,255,.2)"; ctx.fillRect(x, y + h * 0.24, w, h * 0.16);
+  ctx.fillStyle = "rgba(0,0,0,.14)"; ctx.fillRect(x, y + h * 0.74, w, h * 0.16);
+}
+function floatThread(ctx, x0, x1, y, h, col){
+  const r = Math.min(h * 0.45, (x1 - x0) / 2);
+  const round = (yy, hh) => { ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x0, yy, x1 - x0, hh, r) : ctx.rect(x0, yy, x1 - x0, hh); ctx.fill(); };
+  ctx.fillStyle = "rgba(0,0,0,.28)"; round(y + h * 0.12, h * 0.88);                     // cast shadow on the ground cloth
+  ctx.fillStyle = col; round(y + h * 0.02, h * 0.86);
+  ctx.fillStyle = "rgba(255,255,255,.32)"; ctx.fillRect(x0 + r * 0.6, y + h * 0.18, Math.max(0, x1 - x0 - r * 1.2), h * 0.14);
+  ctx.fillStyle = "rgba(0,0,0,.16)"; ctx.fillRect(x0 + r * 0.6, y + h * 0.66, Math.max(0, x1 - x0 - r * 1.2), h * 0.14);
+}
+function bareWarp(ctx, y, h, W, T){
+  const colW = W / COLS;
+  ctx.fillStyle = T.gap; ctx.fillRect(0, y, W, h);
+  for (let c = 0; c < COLS; c++) warpCell(ctx, c * colW, y, colW, h, c, T, 0);
+}
+// Paint one bar of cloth. upto = number of columns woven so far (live bar); the rest shows bare warp.
+function paintRow(ctx, row, y0, W, T, upto){
+  if (row.seed == null) row.seed = ++rowSeq;
+  const colW = W / COLS, picks = pickList(row), lim = upto == null ? COLS : upto;
+  ctx.fillStyle = T.gap; ctx.fillRect(0, y0, W, bandH(row, colW));
+  let y = y0;
+  picks.forEach((p, pi) => {
+    const h = pickH(colW, p.g), pk = p.g ? null : row.picks[p.k];
+    // a layer's thread is woven plainly (muted colour) while silent, and floats bright on top while it sounds
+    const groundCol = pk && !pk.muted ? mix(T.layers[pk.ci] || T.ink, T.weft, 0.5) : T.weft;
+    const covered = new Uint8Array(COLS);
+    if (pk && !pk.muted) for (const sg of pk.segs) for (let c = sg.c0; c < sg.c1; c++) covered[c] = 1;
+    for (let c = 0; c < COLS; c++) {
+      const x = c * colW;
+      if (c >= lim) { warpCell(ctx, x, y, colW, h, c, T); continue; }
+      if (covered[c]) { warpCell(ctx, x, y, colW, h, c, T); continue; }   // under the float; mostly hidden
+      const over = (c + pi + row.seed) % 3 !== 0;                          // weft-faced twill: over two, under one, stepping each pick
+      if (over) weftCell(ctx, x, y, colW, h, groundCol, row.seed * 97 + pi * 13 + c); else warpCell(ctx, x, y, colW, h, c, T);
+    }
+    if (pk && !pk.muted) {
+      const base = T.layers[pk.ci] || T.ink;
+      for (const sg of pk.segs) {
+        if (sg.c0 >= lim) continue;
+        const c1 = Math.min(sg.c1, lim);
+        floatThread(ctx, sg.c0 * colW + colW * 0.06, c1 * colW - colW * 0.06, y, h, mix(base, "#ffffff", sg.lift * 0.5));
+      }
+    }
+    y += h;
+  });
+}
+function cachedRow(row, W, T){
+  const key = W + T.key;
+  if (row._c && row._k === key) return row._c;
+  const c = document.createElement("canvas"); c.width = W; c.height = Math.ceil(bandH(row, W / COLS));
+  paintRow(c.getContext("2d"), row, 0, W, T);
+  row._c = c; row._k = key; return c;
+}
+function paintTags(ctx, row, y, T, fontPx){
+  let x = 6 * dpr;
+  ctx.font = `600 ${fontPx}px Recursive, system-ui, sans-serif`; ctx.textBaseline = "middle";
+  for (const t of row.tags) {
+    const w = ctx.measureText(t).width + 12 * dpr, h = fontPx + 8 * dpr;
+    ctx.globalAlpha = 0.94; ctx.fillStyle = T.surface; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x, y + 3 * dpr, w, h, h / 2) : ctx.rect(x, y + 3 * dpr, w, h); ctx.fill();
+    ctx.globalAlpha = 1; ctx.fillStyle = T.ink; ctx.fillText(t, x + 6 * dpr, y + 3 * dpr + h / 2 + 0.5);
+    x += w + 4 * dpr;
+  }
+}
+function drawShuttle(ctx, x, y, T){
+  const w = 30 * dpr, h = 9 * dpr;
+  ctx.fillStyle = "rgba(0,0,0,.25)"; ctx.beginPath(); ctx.ellipse(x, y + 2 * dpr, w / 2, h / 2, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = T.shuttle; ctx.beginPath(); ctx.ellipse(x, y, w / 2, h / 2, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = "rgba(255,255,255,.3)"; ctx.beginPath(); ctx.ellipse(x - w * 0.08, y - h * 0.18, w * 0.3, h * 0.16, 0, 0, Math.PI * 2); ctx.fill();
+}
+function drawCloth(ph){
+  if (tap && tap.ok) { tap.draw(ph); updateClothStatus(); return; }
+  if (!cv.width) return;
+  const T = tokens(), W = cv.width, H = cv.height, colW = W / COLS, fontPx = 11 * dpr;
+  const loom = 22 * dpr;                                    // bare warp waiting to be woven, below the cloth
+  const fell = H - loom;                                    // the weaving edge: new bars are added here
+  bareWarp(cx, 0, H, W, T);
+  const tag = (r, y) => { if (r.tags.length && r.tags[0] !== "first bar") paintTags(cx, r, y, T, fontPx); };
+  // the cloth fills from the top; once it reaches the weaving edge, older bars scroll up out of view
+  let rowsH = 0; for (const r of rows) { rowsH += bandH(r, colW); if (rowsH > fell) break; }
+  const next = !(playing && curRow) && rows.length ? makeRow(0, rows[0]?.sig) : null;
+  if (next) next.seed = 999;
+  const lead = playing && curRow ? bandH(curRow, colW) : next ? bandH(next, colW) + 6 * dpr : 0;
+  let y = (playing && curRow) || rows.length ? Math.min(fell, lead + rowsH) : fell;   // bottom edge of the newest band
+  if (playing && curRow) {
+    const upto = Math.ceil((ph || 0) * COLS), bh = bandH(curRow, colW);
+    y -= bh;
+    paintRow(cx, curRow, y, W, T, upto);
+    drawShuttle(cx, Math.min(W - 15 * dpr, Math.max(15 * dpr, (ph || 0) * W)), y + bh * 0.5, T);
+    tag(curRow, y);
+  } else if (!rows.length) {
+    // nothing woven yet: preview the cloth, bar 1 at the top and later bars below it
+    const bh = bandH(makeRow(0, null), colW), n = Math.max(1, Math.ceil(fell / bh));
+    for (let c = n - 1; c >= 0; c--) {
+      const r = makeRow(c, null); r.seed = 1000 + c;
+      y -= bh;
+      cx.globalAlpha = 0.8; paintRow(cx, r, y, W, T); cx.globalAlpha = 1;
+    }
+  } else {
+    // paused: the next bar is shown faintly at the weaving edge so changes are visible before weaving
+    const r = next;
+    y -= bandH(r, colW);
+    cx.globalAlpha = 0.5; paintRow(cx, r, y, W, T); cx.globalAlpha = 1;
+    tag(r, y);
+    y -= 6 * dpr;
+  }
+  for (const r of rows) {                                   // rows is newest first, so work upward
+    if (y < 0) break;
+    y -= bandH(r, colW);
+    cx.drawImage(cachedRow(r, W, T), 0, Math.round(y));
+    tag(r, y);
+  }
+  // selvedges
+  cx.fillStyle = T.gap; cx.globalAlpha = 0.6; cx.fillRect(0, 0, 2 * dpr, fell); cx.fillRect(W - 2 * dpr, 0, 2 * dpr, fell); cx.globalAlpha = 1;
+  updateClothStatus();
+}
+function updateClothStatus(){
+  const hint = $("clothHint");
+  hint.hidden = playing;
+  hint.textContent = !piece.layers.length ? "Ask for a layer to start the cloth." : rows.length ? "Paused. The faint band at the weaving edge is the next bar." : "Preview. Press play to start weaving.";
+  $("clothStat").textContent = `${rows.length} ${rows.length === 1 ? "bar" : "bars"} woven`;
+}
+
+/* ---------- Tapestry on a loom, drawn in 3D with Three.js ----------
+   The same bars and threads as the flat cloth. Each crossing of a warp thread and a weft pick is one texel of a
+   data texture; a shader draws the yarns, their twist and sheen. The flat canvas above is the fallback. */
+const TAP_VS = `varying vec3 vW;
+void main(){ vec4 w = modelMatrix * vec4(position, 1.0); vW = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }`;
+const TAP_FS = `
+uniform sampler2D uTex; uniform float uRows; uniform float uFell; uniform float uScroll;
+uniform vec3 uPal[12]; uniform vec3 uBg; uniform vec3 uWarp; uniform vec3 uWarp2; uniform vec3 uCam;
+varying vec3 vW;
+const float PICK = 0.08; const float CELL = 0.1; const float COLS = 96.0;
+const vec3 LIGHT = vec3(-0.42, 0.5, 0.76);          // cloth-local: x right, y away from the weaver, z up
+vec4 cellAt(float c, float r){
+  if (r < 0.0 || r >= uRows || c < 0.0 || c >= COLS) return vec4(0.0);
+  return floor(texture2D(uTex, vec2((c + 0.5) / COLS, (r + 0.5) / uRows)) * 255.0 + 0.5);
+}
+vec3 palette(float i){ vec3 c = uPal[0]; for (int j = 0; j < 12; j++) { if (abs(float(j) - i) < 0.5) c = uPal[j]; } return c; }
+float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+bool is(float v, float k){ return abs(v - k) < 0.5; }
+// one round, twisted yarn. across: -1..1 across its width; along: runs with it; T: its direction
+vec3 yarn(vec3 base, float across, float along, vec3 T, vec3 V, float seed, float detail, float sheen){
+  float prof = sqrt(max(0.0, 1.0 - across * across));
+  vec3 side = T.x > 0.5 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0);
+  vec3 n = normalize(side * across + vec3(0.0, 0.0, 1.0) * prof);
+  vec3 l = normalize(LIGHT);
+  float diff = 0.36 + 0.64 * max(dot(n, l), 0.0);
+  float twist = sin(6.2831 * (along * 3.0 + across * 0.7) + seed * 6.2831);
+  float fibre = 1.0 + detail * (0.08 * twist + 0.06 * (hash(vec2(floor(along * 12.0), floor(across * 3.0) + seed)) - 0.5));
+  vec3 h = normalize(l + V);
+  float th = dot(T, h);
+  float spec = pow(sqrt(max(0.0, 1.0 - th * th)), 26.0) * sheen * prof;
+  return base * diff * fibre + vec3(spec);
+}
+void main(){
+  vec3 V = normalize(vec3(uCam.x - vW.x, vW.z - uCam.z, uCam.y - vW.y));
+  float c = (vW.x + COLS * CELL * 0.5) / CELL;
+  float d = (uFell - vW.z) / PICK;                  // picks from the weaving edge; positive is woven cloth
+  float r = d + uScroll;
+  float fw = max(fwidth(c), fwidth(d));
+  float detail = 1.0 - smoothstep(0.22, 0.7, fw);
+  vec3 gap = uBg * 0.5;
+  vec3 col; vec3 flatC;
+  if (c < 0.0 || c >= COLS) { col = uBg; flatC = uBg; }
+  else {
+    float ci = floor(c), fx = fract(c);
+    float wa = (fx - 0.5) / 0.36;
+    vec3 warpC = mod(ci, 24.0) < 0.5 ? uWarp2 : uWarp;
+    float rowi = floor(r), fy = fract(r);
+    vec4 t = d < 0.0 ? vec4(0.0) : cellAt(ci, rowi);
+    if (t.g < 0.5) {                                 // bare warp, waiting to be woven
+      col = abs(wa) < 1.0 ? yarn(warpC, wa, d * 0.8, vec3(0.0, 1.0, 0.0), V, ci * 0.37, detail, 0.12) : gap;
+      flatC = mix(warpC * 0.8, gap, 0.3);
+    } else {
+      float flags = t.b;
+      bool ghost = mod(floor(flags / 4.0), 2.0) > 0.5;
+      bool muted = mod(floor(flags / 8.0), 2.0) > 0.5;
+      float par = mod(floor(flags / 16.0), 2.0);
+      bool fl = t.g > 2.5;
+      vec3 base = palette(t.r);
+      if (muted) base = mix(base, uPal[0], 0.62) * 0.94;   // a silent layer: its thread, woven quietly
+      if (fl) base = mix(base, vec3(1.0), t.a / 255.0 * 0.4); // sounding: full colour, paler for higher notes
+      // weft-faced tapestry: each pick is a round yarn packed tight, rising over every other warp,
+      // with neighbouring picks offset by one warp. That offset makes the pebbled rib of tapestry.
+      float ang = 6.2831 * (fx + 0.5 * par);
+      float und = cos(ang);
+      float across = (fy - 0.5) / 0.5;
+      float prof = sqrt(max(0.0, 1.0 - across * across));
+      vec3 n = normalize(vec3(-sin(ang) * 0.5 * detail, across * 0.95, prof + 0.05));
+      vec3 l = normalize(LIGHT);
+      float diff = 0.34 + 0.66 * max(dot(n, l), 0.0);
+      float twist = sin(6.2831 * (c * 2.0 + across * 0.8) + rowi * 1.7);
+      float fibre = 1.0 + detail * (0.07 * twist + 0.05 * (hash(vec2(floor(c * 8.0), rowi)) - 0.5));
+      vec3 h = normalize(l + V);
+      float th = h.x;
+      float spec = pow(sqrt(max(0.0, 1.0 - th * th)), 22.0) * (fl ? 0.42 : 0.14) * prof * (0.6 + 0.4 * und);
+      col = base * diff * fibre * (0.86 + 0.14 * und * detail) + vec3(spec);
+      if (fl) col *= 1.07; else col *= 0.94 + 0.12 * (t.a / 255.0);   // small dye-lot variation from yarn to yarn
+      // where a sounding thread starts or stops, the weft turns around a warp and leaves a small slit
+      if (fl && mod(flags, 2.0) > 0.5) col *= mix(0.45, 1.0, smoothstep(0.0, 0.09, fx));
+      if (fl && mod(floor(flags / 2.0), 2.0) > 0.5) col *= mix(0.45, 1.0, smoothstep(0.0, 0.09, 1.0 - fx));
+      flatC = base * 0.82;
+      if (!fl && cellAt(ci, rowi + 1.0).g > 2.5) {        // a raised thread just beyond casts a soft shadow
+        float sh = 1.0 - 0.3 * smoothstep(0.35, 1.0, fy);
+        col *= sh; flatC *= sh;
+      }
+      if (ghost) { col = mix(col, uBg, 0.5); flatC = mix(flatC, uBg, 0.5); }
+    }
+    col = mix(flatC, col, detail);
+  }
+  col = mix(col, uBg, smoothstep(16.0, 36.0, distance(uCam, vW)) * 0.85);
+  gl_FragColor = vec4(col, 1.0);
+}`;
+const tap = (() => {
+  if (!window.THREE) return null;
+  const host = $("tapestry");
+  let renderer;
+  try { renderer = new THREE.WebGLRenderer({canvas: host, antialias: true}); } catch (e) { console.warn("3D cloth unavailable, using flat cloth", e); return null; }
+  if (!renderer || !renderer.getContext()) return null;
+  host.hidden = false; cv.hidden = true;
+  const PICK = 0.08, CELL = 0.1, HALF = COLS * CELL / 2, MAXP = 512;
+  const scene = new THREE.Scene(), camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
+  const data = new Uint8Array(COLS * MAXP * 4);
+  const tex = new THREE.DataTexture(data, COLS, MAXP, THREE.RGBAFormat);
+  tex.magFilter = THREE.NearestFilter; tex.minFilter = THREE.NearestFilter; tex.generateMipmaps = false;
+  const pal = Array.from({length: 12}, () => new THREE.Color());
+  const U = {uTex:{value:tex}, uRows:{value:MAXP}, uFell:{value:0}, uScroll:{value:0}, uPal:{value:pal},
+             uBg:{value:new THREE.Color()}, uWarp:{value:new THREE.Color()}, uWarp2:{value:new THREE.Color()}, uCam:{value:new THREE.Vector3()}};
+  const bed = new THREE.Mesh(new THREE.PlaneGeometry(HALF * 2 + 1.6, 70), new THREE.ShaderMaterial({uniforms:U, vertexShader:TAP_VS, fragmentShader:TAP_FS, extensions:{derivatives:true}}));
+  bed.rotation.x = -Math.PI / 2; bed.position.z = -28;
+  const wood = new THREE.MeshStandardMaterial({roughness: 0.8, metalness: 0});
+  const beater = new THREE.Mesh(new THREE.BoxGeometry(HALF * 2 + 1.1, 0.2, 0.22), wood);
+  const shuttle = new THREE.Mesh(new THREE.SphereGeometry(1, 32, 16), wood); shuttle.scale.set(0.6, 0.1, 0.16);
+  const beam = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.32, HALF * 2 + 1.1, 32), wood); beam.rotation.z = Math.PI / 2;
+  scene.add(bed, beater, shuttle, beam, new THREE.HemisphereLight(0xffffff, 0x303030, 0.55));
+  const sun = new THREE.DirectionalLight(0xffffff, 0.6); sun.position.set(-4, 8, -6); scene.add(sun);
+
+  let zTop = -10, zBot = 2, fellNear = 0.5, fz = null, fellT = 0, scroll = 0, mode = "", lastPicks = 0, lastNewest = null, beatAt = -1e9, last = performance.now();
+  let ph = 0, pending = false, checked = false;
+  const tagEls = [];
+  function rayZ(ndcY){
+    const v = new THREE.Vector3(0, ndcY, 0.5).unproject(camera).sub(camera.position).normalize();
+    return camera.position.z + v.z * (-camera.position.y / v.y);
+  }
+  function layout(){
+    const w = host.clientWidth, h = host.clientHeight; if (!w || !h) return false;
+    renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1)); renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    const el = 62 * Math.PI / 180, target = new THREE.Vector3(0, 0, -1.6);
+    const hf = 2 * Math.atan(Math.tan(camera.fov * Math.PI / 360) * camera.aspect);
+    const D = (HALF + 0.45) / Math.tan(hf / 2);
+    camera.position.set(0, D * Math.sin(el), target.z + D * Math.cos(el));
+    camera.lookAt(target); camera.updateProjectionMatrix();
+    zTop = rayZ(0.86); zBot = rayZ(-1);
+    fellNear = zBot - 0.8;
+    beam.position.set(0, 0.05, zBot - 0.2);
+    return true;
+  }
+  function theme(){
+    const T = tokens();
+    pal[0].set(T.weft); T.layers.forEach((h, i) => pal[i + 1].set(h || T.ink));
+    pal[10].set(mix(T.weft, "#000000", 0.2));
+    U.uBg.value.set(T.gap); U.uWarp.value.set(T.warp); U.uWarp2.value.set(T.warp2);
+    scene.background = new THREE.Color(T.gap);
+    wood.color.set(mix(T.shuttle, T.gap, 0.3));
+  }
+  // write one pick (a row of crossings) into the texture
+  function writePick(p, row, pk, i, upto, ghost, k2){
+    const o = p * COLS * 4, gb = ghost ? 4 : 0, pb = (p + ((row.seed || 0) & 1)) & 1 ? 16 : 0;
+    if (pk.g) {
+      const R = i === 0 ? 10 : 0;                    // the first pick of each bar is a shade darker: a bar line
+      const dye = Math.round(rnd((row.seed || 0) * 7 + i, k2) * 255);
+      for (let c = 0; c < COLS; c++) { const k = o + c * 4;
+        if (c >= upto) { data[k] = data[k + 1] = data[k + 2] = data[k + 3] = 0; continue; }
+        data[k] = R; data[k + 1] = 1; data[k + 2] = gb | pb; data[k + 3] = dye; }
+      return;
+    }
+    const L = row.picks[pk.k], fl = new Int16Array(COLS).fill(-1), sh = k2 ? 1 : 0;   // the second yarn is offset by one warp: interlocking teeth
+    const dye = Math.round(rnd((row.seed || 0) * 7 + i, k2 + 5) * 255);
+    if (!L.muted) L.segs.forEach((sg, j) => { for (let c = Math.min(COLS - 1, sg.c0 + sh); c < Math.min(COLS, sg.c1 + sh); c++) fl[c] = j; });
+    for (let c = 0; c < COLS; c++) { const k = o + c * 4;
+      if (c >= upto) { data[k] = data[k + 1] = data[k + 2] = data[k + 3] = 0; continue; }
+      if (fl[c] >= 0) { const sg = L.segs[fl[c]];
+        data[k] = L.ci + 1; data[k + 1] = 3; data[k + 2] = (c === Math.min(COLS - 1, sg.c0 + sh) ? 1 : 0) | (c === Math.min(COLS, sg.c1 + sh) - 1 ? 2 : 0) | gb | pb; data[k + 3] = Math.round((sg.lift || 0) * 255);
+      } else { data[k] = L.muted ? 0 : L.ci + 1; data[k + 1] = 1; data[k + 2] = (L.muted ? 0 : 8) | gb | pb; data[k + 3] = dye; }
+    }
+  }
+  // each layer's pick is woven two yarns deep so its colour reads as a band; ground picks are one yarn
+  const depth = (pk) => pk.g ? 1 : 2;
+  function build(){
+    const parts = [];
+    if (playing && curRow) parts.push({row: curRow, upto: Math.ceil(ph * COLS)});
+    else if (!rows.length) {
+      if (piece.layers.length) {
+        const per = pickList(makeRow(0, null)).reduce((n, pk) => n + depth(pk), 0), n = Math.min(60, Math.ceil((fellNear - zTop) / PICK / per) + 2);
+        for (let c = n - 1; c >= 0; c--) { const r = makeRow(c, null); r.seed = 1000 + c; parts.push({row: r, ghost: true}); }
+      }
+    } else { const r = makeRow(0, rows[0]?.sig); r.seed = 999; parts.push({row: r, ghost: true, label: true}); }
+    for (const r of rows) parts.push({row: r});
+    let p = 0; const tags = [];
+    for (const part of parts) {
+      const r = part.row; if (r.seed == null) r.seed = ++rowSeq;
+      const list = pickList(r);
+      for (let i = list.length - 1; i >= 0 && p < MAXP; i--) for (let k = 0; k < depth(list[i]) && p < MAXP; k++, p++) writePick(p, r, list[i], i, part.upto ?? COLS, part.ghost, k);
+      if (r.tags.length && r.tags[0] !== "first bar" && (!part.ghost || part.label)) tags.push({at: p, text: r.tags.join("  ")});
+      if (p >= MAXP) break;
+    }
+    data.fill(0, p * COLS * 4);
+    tex.needsUpdate = true;
+    return {picks: p, tags, newest: parts[0]?.row || null};
+  }
+  function placeTags(tags){
+    const box = $("tapTags"), w = host.clientWidth, h = host.clientHeight;
+    while (tagEls.length < tags.length) { const e = document.createElement("span"); e.className = "tap-tag"; box.append(e); tagEls.push(e); }
+    tagEls.forEach((e, i) => {
+      const t = tags[i];
+      if (!t) { e.hidden = true; return; }
+      const dz = t.at - scroll, z = fz - dz * PICK;
+      const v = new THREE.Vector3(-HALF + 0.15, 0.02, z).project(camera);
+      const x = (v.x + 1) / 2 * w, y = (1 - v.y) / 2 * h;
+      if (dz < 0 || v.z > 1 || y < 8 || y > h - 8 || z < zTop - 4) { e.hidden = true; return; }
+      e.hidden = false; e.textContent = t.text;
+      const s = Math.max(0.55, Math.min(1, (y / h) * 1.2 + 0.2));
+      e.style.transform = `translate(${x.toFixed(1)}px, ${(y - 9).toFixed(1)}px) scale(${s.toFixed(2)})`;
+    });
+  }
+  function render(){
+    pending = false;
+    if (!layout()) return;
+    const now = performance.now(), dt = Math.min(0.1, (now - last) / 1000); last = now;
+    const b = build();
+    const m = playing ? "play" : rows.length ? "paused" : "preview";
+    const target = fellNear;
+    if (m !== mode || fz == null) { mode = m; fz = fellT = target; scroll = 0; }
+    else if (b.newest !== lastNewest || b.picks !== lastPicks) {
+      const added = b.picks - lastPicks, moved = (target - fellT) / PICK;
+      if (added > 0) { scroll = Math.max(-80, Math.min(80, scroll + added - moved)); if (playing) beatAt = now; }
+      fellT = target;
+    }
+    lastPicks = b.picks; lastNewest = b.newest;
+    const k = 1 - Math.exp(-dt * 6);
+    fz += (fellT - fz) * k; scroll -= scroll * k;
+    if (Math.abs(scroll) < 0.01) scroll = 0;
+    U.uFell.value = fz; U.uScroll.value = scroll;
+    U.uCam.value.copy(camera.position);
+    const beat = Math.exp(-(now - beatAt) / 120);       // the beater swings in to pack each new bar
+    beater.position.set(0, 0.11, fz + 0.32 - 0.24 * beat);
+    if (playing) shuttle.position.set(-HALF + ph * HALF * 2, 0.07, fz + 0.1);
+    else shuttle.position.set(-HALF - 0.5, 0.07, fz + 0.1);
+    renderer.render(scene, camera);
+    if (!checked) {                                    // a graphics chip that rejects the shader gets the flat cloth
+      checked = true;
+      const bad = (renderer.info.programs || []).some(pr => pr.diagnostics && pr.diagnostics.runnable === false);
+      if (bad) { api.ok = false; host.hidden = true; $("tapTags").textContent = ""; cv.hidden = false; fitCanvas(); return; }
+    }
+    placeTags(b.tags);
+    if (!playing && (Math.abs(fellT - fz) > 0.002 || scroll !== 0)) request();
+  }
+  function request(){ if (!pending) { pending = true; requestAnimationFrame(render); } }
+  theme();
+  new ResizeObserver(() => request()).observe(host);
+  const api = {
+    ok: true,
+    draw(p){ ph = p || 0; if (playing) render(); else request(); },
+    theme(){ theme(); request(); }
+  };
+  return api;
+})();
+function renderLegend(){
+  const lg = $("legend"); lg.textContent = "";
+  piece.layers.forEach((L, i) => { const s = document.createElement("span"); const d = document.createElement("i"); d.style.background = `var(${LAYER_VARS[i % 8]})`; s.append(d, L.name); lg.append(s); });
+}
+function frame(){
+  if (playing && repl) {
+    let now = 0; try { now = repl.scheduler.now(); } catch {}
+    if (now >= 0) {
+      const cyc = Math.floor(now), ph = now - cyc;
+      if (cyc !== curCycle) {
+        if (curRow && curCycle >= 0) { rows.unshift(curRow); if (rows.length > 200) rows.pop(); }
+        curCycle = cyc; curRow = makeRow(cyc, rows[0]?.sig);
+      }
+      drawCloth(ph);
+    }
+  }
+  requestAnimationFrame(frame);
+}
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { tap?.theme(); drawCloth(); });
+new MutationObserver(() => { tap?.theme(); drawCloth(); }).observe(document.documentElement, {attributes:true, attributeFilter:["data-theme"]});
+
+async function saveCloth(){
+  if (!rows.length) { $("recNote").textContent = "Weave a few bars first: press play and let it run."; return; }
+  if (!downloads) { $("recNote").textContent = "Saving files isn't available in this view."; return; }
+  const T = tokens(), W = 1440, colW = W / COLS, head = 72;
+  const keep = []; let body = 0;
+  for (const r of rows) { const h = bandH(r, colW); if (head + body + h + 24 > 16000) break; keep.push(r); body += h; }
+  keep.reverse();
+  const c = document.createElement("canvas"); c.width = W; c.height = head + body + 24; const ctx = c.getContext("2d");
+  ctx.fillStyle = T.surface; ctx.fillRect(0, 0, W, c.height);
+  ctx.fillStyle = T.ink; ctx.font = "800 28px Recursive, system-ui, sans-serif"; ctx.textBaseline = "middle"; ctx.fillText("Groove Loom", 24, head / 2);
+  ctx.fillStyle = T.muted; ctx.font = "500 18px Recursive, system-ui, sans-serif";
+  ctx.fillText(`${keep.length} bars · ${piece.tempo} bpm · ${piece.key} ${piece.scale} · ${piece.layers.map(l => l.name).join(", ")}`, 220, head / 2);
+  let y = head;
+  for (const r of keep) { paintRow(ctx, r, y, W, T); y += bandH(r, colW); }
+  const blob = await new Promise(res => c.toBlob(res, "image/png"));
+  try { await downloads.save({filename:`groove-loom-cloth-${rows.length}-bars.png`, data:blob}); $("recNote").textContent = "Cloth saved."; }
+  catch (e) { $("recNote").textContent = e && e.code === "declined" ? "Save cancelled." : "This view couldn't save the image."; }
+}
+
+function renderTransport(){
+  $("tempo").value = piece.tempo; $("tempoOut").textContent = `${piece.tempo} bpm`;
+  $("swing").value = piece.swing; $("swingOut").textContent = piece.swing < 0.02 ? "straight" : piece.swing > 0.8 ? "heavy shuffle" : `${Math.round(piece.swing * 100)}%`;
+  $("key").value = piece.key; $("scale").value = piece.scale;
+  $("undo").disabled = !undoStack.length;
+}
+function slider(label, value, min, max, step, fmt, onInput, id){
+  const wrap = document.createElement("div"); wrap.className = "ctl";
+  const row = document.createElement("div"); row.className = "ctl-row";
+  const lab = document.createElement("label"); lab.htmlFor = id; lab.textContent = label;
+  const out = document.createElement("output"); out.className = "num"; out.textContent = fmt(value);
+  row.append(lab, out);
+  const inp = document.createElement("input"); inp.type = "range"; inp.id = id; inp.min = min; inp.max = max; inp.step = step; inp.value = value;
+  inp.addEventListener("pointerdown", () => snapshot(), {once:false});
+  inp.addEventListener("keydown", () => snapshot());
+  inp.addEventListener("input", () => { out.textContent = fmt(Number(inp.value)); onInput(Number(inp.value)); });
+  wrap.append(row, inp); return wrap;
+}
+function renderLayers(){
+  const box = $("layers"); box.textContent = "";
+  $("layerCount").textContent = `${piece.layers.length} of ${MAX_LAYERS}`;
+  if (!piece.layers.length) { const e = document.createElement("div"); e.className = "empty"; e.textContent = "No layers yet. Try “start me off with a 4/4 beat”."; box.append(e); return; }
+  const on = audible(piece);
+  piece.layers.forEach((L, i) => {
+    const inst = INSTR[L.instrument];
+    const card = document.createElement("article"); card.className = "layer" + (on[i] ? "" : " off");
+    const h = document.createElement("div"); h.className = "lh";
+    const sw = document.createElement("span"); sw.className = "sw"; sw.style.background = `var(${LAYER_VARS[i % 8]})`;
+    const nm = document.createElement("span"); nm.className = "nm"; nm.textContent = L.name;
+    const ins = document.createElement("span"); ins.className = "in"; ins.textContent = inst.label;
+    const sp = document.createElement("span"); sp.className = "sp";
+    const mk = (txt, title, pressed, fn) => { const b = document.createElement("button"); b.className = "tg"; b.textContent = txt; b.title = title; b.setAttribute("aria-label", `${title} ${L.name}`); b.setAttribute("aria-pressed", String(pressed)); b.onclick = fn; return b; };
+    const btns = document.createElement("span"); btns.className = "btns";
+    btns.append(
+      mk("M", "Mute", L.muted, () => { snapshot(); L.muted = !L.muted; update(); }),
+      mk("S", "Solo", L.solo, () => { snapshot(); L.solo = !L.solo; update(); }),
+      mk("×", "Remove", false, () => { snapshot(); piece.layers.splice(i, 1); update(); }));
+    h.append(sw, nm, ins, sp, btns);
+    card.append(h);
+    if (L.about) { const a = document.createElement("p"); a.className = "about"; a.textContent = L.about; card.append(a); }
+    const pat = document.createElement("div"); pat.className = "pat mono";
+    const rm = rhythmMini(L.rhythm);
+    pat.textContent = [inst.kind === "tone" ? `notes ${L.notes}` : null, rm ? `rhythm ${rm}` : null, L.rhythm?.mode === "euclid" ? `(${L.rhythm.hits} hits over ${L.rhythm.steps} steps)` : null].filter(Boolean).join("   ");
+    card.append(pat);
+    const k = document.createElement("div"); k.className = "knobs";
+    const pct = (v) => `${Math.round(v * 100)}`;
+    k.append(
+      slider("Volume", L.volume, 0, 1, 0.01, pct, (v) => { L.volume = v; soft(); }, `v-${L.id}`),
+      slider("Tone", L.tone, 0, 1, 0.01, (v) => v < 0.3 ? "dark" : v < 0.45 ? "warm" : v > 0.75 ? "bright" : "natural", (v) => { L.tone = v; soft(); }, `t-${L.id}`),
+      slider("Space", L.space, 0, 1, 0.01, pct, (v) => { L.space = v; soft(); }, `s-${L.id}`)
+    );
+    if (L.rhythm?.mode === "euclid") {
+      const R = L.rhythm;
+      const hitsS = slider("Hits", R.hits, 0, R.steps, 1, String, (v) => { R.hits = v; soft(true); }, `h-${L.id}`);
+      const stepsS = slider("Steps", R.steps, 1, 32, 1, String, (v) => { R.steps = v; R.hits = Math.min(R.hits, v); R.rotate = Math.min(R.rotate, v - 1); soft(true); }, `n-${L.id}`);
+      const rotS = slider("Rotate", R.rotate, 0, Math.max(0, R.steps - 1), 1, String, (v) => { R.rotate = v; soft(true); }, `r-${L.id}`);
+      stepsS.querySelector("input").addEventListener("change", () => renderLayers());
+      k.append(hitsS, stepsS, rotS);
+    }
+    card.append(k);
+    box.append(card);
+  });
+}
+function renderLog(){
+  const box = $("log"); box.textContent = "";
+  for (const m of log.slice(-12)) {
+    const d = document.createElement("div"); d.className = "msg " + (m.who === "you" ? "you" : "loom") + (m.err ? " err" : "");
+    const w = document.createElement("span"); w.className = "who"; w.textContent = m.who === "you" ? "You" : "Loom";
+    d.append(w, document.createTextNode(m.text)); box.append(d);
+  }
+  box.scrollTop = box.scrollHeight;
+}
+
+/* ---------- Update cycle ---------- */
+let softTimer = 0;
+function soft(redrawPat){ clearTimeout(softTimer); softTimer = setTimeout(() => { rebuild(); if (redrawPat) renderPatTexts(); }, 60); }
+function renderPatTexts(){ // keep the pattern readouts in step with euclid sliders without re-rendering the cards
+  const cards = $("layers").querySelectorAll(".layer");
+  piece.layers.forEach((L, i) => { const p = cards[i]?.querySelector(".pat"); if (!p) return; const inst = INSTR[L.instrument]; const rm = rhythmMini(L.rhythm);
+    p.textContent = [inst.kind === "tone" ? `notes ${L.notes}` : null, rm ? `rhythm ${rm}` : null, L.rhythm?.mode === "euclid" ? `(${L.rhythm.hits} hits over ${L.rhythm.steps} steps)` : null].filter(Boolean).join("   "); });
+}
+function rebuild(){
+  compiled = compile(piece);
+  $("code").textContent = codeFor(piece);
+  renderLegend();
+  if (playing && curRow) { const keep = curRow.cycle, seed = curRow.seed; curRow = makeRow(keep, rows[0]?.sig); curRow.seed = seed; }
+  drawCloth();
+  if (playing && repl) {
+    // a newly added recorded instrument is fetched before the new pattern starts, so its first notes aren't dropped
+    const target = compiled;
+    withSounds(piece).then(() => { if (playing && compiled === target) { repl.setCps(target.cps); repl.setPattern(target.pattern, true); } });
+  } else ready.then(() => preloadFor(piece)).catch(() => {});
+  save();
+}
+// wait for the piece's sounds, but never longer than a few seconds
+function withSounds(p){
+  const note = $("recNote");
+  let shown = false;
+  const t = setTimeout(() => { shown = true; note.textContent = "Loading sounds…"; }, 300);
+  return Promise.race([ready.then(() => preloadFor(p)), new Promise(r => setTimeout(r, 8000))])
+    .catch(() => {}).finally(() => { clearTimeout(t); if (shown && note.textContent === "Loading sounds…") note.textContent = ""; });
+}
+function update(){ renderTransport(); renderLayers(); rebuild(); }
+function snapshot(){ undoStack.push(JSON.stringify(piece)); if (undoStack.length > 40) undoStack.shift(); $("undo").disabled = false; }
+
+/* ---------- Audio ---------- */
+const ready = S.initStrudel({prebake: () => registerSamples()});
+// A limiter on the master output keeps a busy mix from distorting. Recording taps the limiter's output.
+let master = null;
+ready.then(() => {
+  try {
+    const ctx = S.getAudioContext(), out = S.getSuperdoughAudioController().output;
+    const lim = new DynamicsCompressorNode(ctx, {threshold:-8, knee:4, ratio:12, attack:0.003, release:0.2});
+    out.destinationGain.disconnect(); out.destinationGain.connect(lim); lim.connect(ctx.destination);
+    master = lim;
+  } catch (e) { console.warn("limiter not added", e); }
+});
+ready.then(r => { repl = r; }).catch(e => { console.error(e); $("recNote").textContent = "Audio engine failed to load in this view."; });
+async function setPlaying(on){
+  if (on) {
+    repl = await ready;
+    try { await S.getAudioContext().resume(); } catch {}
+    await withSounds(piece);
+    repl.setCps(compiled.cps); await repl.setPattern(compiled.pattern, true);
+  } else if (repl) { repl.stop(); }
+  curRow = null; curCycle = -1;
+  playing = on;
+  drawCloth();
+  $("play").setAttribute("aria-label", on ? "Stop" : "Play");
+  $("playIcon").innerHTML = on ? '<rect x="6" y="6" width="12" height="12" rx="1.5"/>' : '<path d="M7 4.5v15l13-7.5z"/>';
+}
+// Phones only let audio start inside the tap itself, before any waiting, so unlock it synchronously here.
+function unlockAudio(){
+  try { if (navigator.audioSession) navigator.audioSession.type = "playback"; } catch {}   // iPhone: play even with the silent switch on
+  try {
+    const ctx = S.getAudioContext();
+    if (ctx.state !== "running") ctx.resume();
+    const src = ctx.createBufferSource(); src.buffer = ctx.createBuffer(1, 1, ctx.sampleRate); src.connect(ctx.destination); src.start(0);
+  } catch (e) { console.warn("unlock failed", e); }
+}
+// iPhone apps mute this kind of audio while the ringer is on silent. A looping silent media file
+// marks the page as a media player, which lets the music through.
+let keepAlive = null;
+function mediaSession(on){
+  try {
+    if (!keepAlive) { keepAlive = new Audio(new URL("silence.wav", document.baseURI).href); keepAlive.loop = true; keepAlive.setAttribute("playsinline", ""); keepAlive.volume = 0.01; }
+    if (on) keepAlive.play().catch(() => {}); else keepAlive.pause();
+  } catch {}
+}
+function checkAudio(){
+  setTimeout(() => {
+    if (!playing) return;
+    let state = "unknown"; try { state = S.getAudioContext().state; } catch {}
+    if (state !== "running") $("recNote").textContent = "Audio is still locked by this browser. Tap stop, then play again. On a phone, also check the volume and the silent switch.";
+    else if ($("recNote").textContent.startsWith("Audio is still locked")) $("recNote").textContent = "";
+  }, 1500);
+}
+$("play").onclick = () => { unlockAudio(); mediaSession(!playing); setPlaying(!playing).then(() => { if (playing) checkAudio(); }); };
+
+/* ---------- Ask the AI ---------- */
+const CHIPS = ["Start me off with a 4/4 beat", "Throw in a syncopated trumpet", "Make it groovier", "Add a dreamy pad with slow chords", "Try 3 against 4 on the drums", "Strip it back to drums and bass"];
+function instrumentList(){ return Object.entries(INSTR).map(([k, v]) => `${k} (${v.kind === "drum" ? "drum" : "pitched"}: ${v.label})`).join(", "); }
+function buildPrompt(request){
+  const recent = log.filter(m => !m.err).slice(-6).map(m => `${m.who === "you" ? "Person" : "You"}: ${m.text}`).join("\n");
+  const current = clone(piece); current.layers.forEach(l => { delete l.solo; });
+  return `You are the musical brain of Groove Loom, a toy for people who are not musicians. They describe music in plain words; you return a structured description of a looping one-bar piece. The app turns your description into sound. You never write code.
+
+Reply with ONLY one JSON object: {"reply": string, "piece": Piece}.
+
+"reply": one or two short, friendly sentences in plain words saying what you changed and why it sounds that way. Where it's natural, point out the shape or maths of the pattern (e.g. "3 hits spread as evenly as possible over 8 steps", "a 3-beat pattern against a 4-beat bar, so they line up again every 12 steps"). No music-theory jargon unless you explain it in the same breath. If the request is vague, make a confident choice and say what you chose.
+
+Piece = {"tempo": 60-180 (bpm), "key": one of ${JSON.stringify(KEYS)}, "scale": one of ${JSON.stringify(Object.keys(SCALES))}, "swing": 0-1 (0 straight, 0.5 swung, 1 heavy shuffle), "layers": Layer[] (at most ${MAX_LAYERS})}
+
+Layer = {"id": short slug, keep existing ids for layers you keep, "name": 1-3 words shown to the person, "instrument": one of [${instrumentList()}], "notes": pitched instruments only, "rhythm": Rhythm or omitted, "volume": 0-1, "tone": 0-1 (0.5 natural, lower is darker and muffled, higher is brighter), "space": 0-1 (reverb), "octave": -2..2 shift (optional), "muted": boolean, "about": one short plain sentence on what this layer does}
+
+Rhythm is one of:
+- {"mode": "euclid", "hits": h, "steps": n, "rotate": r}: h hits spread evenly over n steps of one bar (n up to 32), rotated r steps. Use this whenever it fits; it is the clearest shape.
+- {"mode": "steps", "pattern": "..."}: x = hit, ~ = rest, spaces split the bar evenly. [x x] squeezes into one step. x*4 repeats. <x ~> alternates bars. e.g. "~ x ~ x" is beats 2 and 4.
+Drums must have a rhythm. For pitched layers the rhythm is optional: with a rhythm, notes are picked up in order at each hit; without one, the notes string sets the timing itself.
+
+"notes" uses scale degrees, not note names: 0 is the key's root, 1 the next scale step, 7 the root an octave up, -1 below the root. Spaces split the bar evenly, ~ is a rest, [0 2] squeezes two notes into one step, <0 3 4> picks a different one each bar (good for chord changes), [0,2,4] is a chord (stack with commas). Only digits, spaces, minus and the symbols ~ [ ] < > , * are allowed.
+
+Keep everything the person did not ask to change. Respect their mutes and knob settings unless they ask otherwise. Keep it musical: bass usually octave 0 with roots, pads slow and quiet, leads not too busy. Prefer the recorded instruments; use the synth ones when the person asks for an electronic, retro or synthy sound.
+
+Current piece:
+${JSON.stringify(current)}
+
+Recent conversation:
+${recent || "(none)"}
+
+Person's new request: ${request}`;
+}
+let ctl = null;
+async function ask(text){
+  text = text.trim(); if (!text || busy) return;
+  if (!sample) { log.push({who:"loom", text:"The AI isn't available in this view, but the knobs, mute, solo and MP3 still work.", err:true}); renderLog(); return; }
+  busy = true; $("send").disabled = true; $("send").textContent = "Thinking…";
+  log.push({who:"you", text}); renderLog();
+  const pending = {who:"loom", text:"Listening and arranging. This can take up to a minute."}; log.push(pending); renderLog();
+  ctl = new AbortController();
+  try {
+    const res = await sample.json(buildPrompt(text), {modelTier:"default", effort:"low", cache:false, signal:ctl.signal});
+    const next = sanitizePiece(res && res.piece, piece);
+    if (!next) throw {code:"invalid_json"};
+    snapshot();
+    piece = next;
+    pending.text = cleanText(res.reply, 500) || "Done.";
+    update();
+  } catch (e) {
+    const code = e && e.code; if (!code) console.error("ask failed", e);
+    pending.err = true;
+    pending.text = code === "not_granted" || code === "sampling_disabled" ? "The AI needs your permission to run here. Without it the knobs still work."
+      : code === "rate_limited" ? "Too many requests just now. Give it a moment, then try again."
+      : code === "invalid_json" ? "I got a muddled answer back and left your piece unchanged. Try again or rephrase."
+      : code === "refused" ? "I can't help with that one. Try describing a sound or a feel."
+      : code === "cancelled" ? "Stopped." : "Something went wrong reaching the AI. Your piece is unchanged; try again.";
+    if (code === "not_granted" || code === "sampling_disabled") { sample = null; $("aiNote").textContent = "AI is off for this view."; }
+  } finally {
+    busy = false; $("send").disabled = false; $("send").textContent = "Send"; renderLog(); save();
+  }
+}
+$("askForm").addEventListener("submit", (e) => { e.preventDefault(); const t = $("prompt").value; $("prompt").value = ""; ask(t); });
+$("prompt").addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); $("askForm").requestSubmit(); } });
+for (const c of CHIPS) { const b = document.createElement("button"); b.type = "button"; b.className = "chip"; b.textContent = c; b.onclick = () => ask(c); $("chips").append(b); }
+
+/* ---------- Transport controls ---------- */
+for (const k of KEYS) { const o = document.createElement("option"); o.value = k; o.textContent = k; $("key").append(o); }
+for (const [k, v] of Object.entries(SCALES)) { const o = document.createElement("option"); o.value = k; o.textContent = v; $("scale").append(o); }
+for (const id of ["tempo", "swing"]) { $(id).addEventListener("pointerdown", snapshot); $(id).addEventListener("keydown", snapshot); }
+$("tempo").addEventListener("input", (e) => { piece.tempo = Number(e.target.value); renderTransport(); soft(); });
+$("swing").addEventListener("input", (e) => { piece.swing = Number(e.target.value); renderTransport(); soft(); });
+$("key").addEventListener("change", (e) => { snapshot(); piece.key = e.target.value; update(); });
+$("scale").addEventListener("change", (e) => { snapshot(); piece.scale = e.target.value; update(); });
+$("undo").onclick = () => { const prev = undoStack.pop(); if (!prev) return; piece = JSON.parse(prev); update(); };
+$("reset").onclick = () => { snapshot(); piece = {tempo:100, key:"C", scale:"minor", swing:0, layers:[]}; rows.length = 0; log.push({who:"loom", text:"Blank slate. Describe a beat or a feel to begin. Undo brings the last piece back."}); renderLog(); update(); };
+
+/* ---------- MP3 export: record the live output, encode with LAME, deliver inside a zip ---------- */
+function crc32(buf){
+  let t = crc32.t; if (!t) { t = crc32.t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } }
+  let c = 0xFFFFFFFF; for (let i = 0; i < buf.length; i++) c = t[(c ^ buf[i]) & 0xFF] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0;
+}
+function zipOne(name, data){
+  const nm = new TextEncoder().encode(name), crc = crc32(data), size = data.length;
+  const lh = new DataView(new ArrayBuffer(30)), cd = new DataView(new ArrayBuffer(46)), end = new DataView(new ArrayBuffer(22));
+  lh.setUint32(0, 0x04034b50, true); lh.setUint16(4, 20, true); lh.setUint16(12, 33, true); lh.setUint32(14, crc, true); lh.setUint32(18, size, true); lh.setUint32(22, size, true); lh.setUint16(26, nm.length, true);
+  cd.setUint32(0, 0x02014b50, true); cd.setUint16(4, 20, true); cd.setUint16(6, 20, true); cd.setUint16(14, 33, true); cd.setUint32(16, crc, true); cd.setUint32(20, size, true); cd.setUint32(24, size, true); cd.setUint16(28, nm.length, true);
+  const cdOff = 30 + nm.length + size;
+  end.setUint32(0, 0x06054b50, true); end.setUint16(8, 1, true); end.setUint16(10, 1, true); end.setUint32(12, 46 + nm.length, true); end.setUint32(16, cdOff, true);
+  return new Blob([lh, nm, data, cd, nm, end], {type:"application/zip"});
+}
+function encodeMp3(left, right, rate){
+  const enc = new lamejs.Mp3Encoder(2, rate, 192), out = [], block = 1152;
+  const toI16 = (f) => { const a = new Int16Array(f.length); for (let i = 0; i < f.length; i++) { const s = Math.max(-1, Math.min(1, f[i])); a[i] = s < 0 ? s * 0x8000 : s * 0x7FFF; } return a; };
+  const L = toI16(left), R = toI16(right);
+  for (let i = 0; i < L.length; i += block) { const b = enc.encodeBuffer(L.subarray(i, i + block), R.subarray(i, i + block)); if (b.length) out.push(new Uint8Array(b)); }
+  const f = enc.flush(); if (f.length) out.push(new Uint8Array(f));
+  const total = out.reduce((n, a) => n + a.length, 0), res = new Uint8Array(total); let o = 0; for (const a of out) { res.set(a, o); o += a.length; } return res;
+}
+function concat(chunks){ const n = chunks.reduce((s, a) => s + a.length, 0), r = new Float32Array(n); let o = 0; for (const a of chunks) { r.set(a, o); o += a.length; } return r; }
+async function record(){
+  if (recording || !piece.layers.length) { if (!piece.layers.length) $("recNote").textContent = "Add a layer first."; return; }
+  recording = true; $("record").disabled = true;
+  const bars = Number($("bars").value), secs = bars * 240 / piece.tempo;
+  try {
+    repl = await ready;
+    const ctx = S.getAudioContext(); await ctx.resume();
+    if (playing) await setPlaying(false);
+    const tap = master || S.getSuperdoughAudioController().output.destinationGain;
+    const proc = ctx.createScriptProcessor(4096, 2, 2), mute = ctx.createGain(); mute.gain.value = 0;
+    const Lc = [], Rc = [];
+    proc.onaudioprocess = (ev) => { Lc.push(new Float32Array(ev.inputBuffer.getChannelData(0))); Rc.push(new Float32Array(ev.inputBuffer.getChannelData(ev.inputBuffer.numberOfChannels > 1 ? 1 : 0))); };
+    tap.connect(proc); proc.connect(mute); mute.connect(ctx.destination);
+    await setPlaying(true);
+    const t0 = performance.now();
+    await new Promise((res) => { const tick = () => { const s = (performance.now() - t0) / 1000; const bar = Math.min(bars, Math.floor(s / (240 / piece.tempo)) + 1); $("recNote").textContent = s < secs ? `Recording bar ${bar} of ${bars}…` : "Letting the last notes ring…"; if (s >= secs + 1.2) res(); else setTimeout(tick, 200); }; tick(); });
+    await setPlaying(false);
+    tap.disconnect(proc); proc.disconnect(); mute.disconnect();
+    let left = concat(Lc), right = concat(Rc);
+    // trim the silence before the first note (scheduler latency)
+    let start = 0; const lim = Math.min(left.length, ctx.sampleRate);
+    while (start < lim && Math.abs(left[start]) < 1e-4 && Math.abs(right[start]) < 1e-4) start++;
+    const len = Math.min(left.length - start, Math.round((secs + 1.2) * ctx.sampleRate));
+    left = left.subarray(start, start + len); right = right.subarray(start, start + len);
+    $("recNote").textContent = "Encoding MP3…";
+    await new Promise(r => setTimeout(r, 30));
+    const mp3 = encodeMp3(left, right, ctx.sampleRate);
+    const base = `groove-loom-${piece.tempo}bpm-${piece.key}-${piece.scale.replace(/\s+/g, "-")}`.replace(/#/g, "sharp");
+    const zip = zipOne(`${base}.mp3`, mp3);
+    if (!downloads) { $("recNote").textContent = "Saving files isn't available in this view."; return; }
+    try {
+      await downloads.save({filename:`${base}.zip`, data:zip});
+      $("recNote").textContent = `Saved ${bars} bars. The MP3 is inside the zip.`;
+    } catch (e) {
+      $("recNote").textContent = e && e.code === "declined" ? "Save cancelled." : "This view couldn't save the file.";
+    }
+  } catch (e) {
+    console.error(e); $("recNote").textContent = "Recording failed in this view.";
+  } finally { recording = false; $("record").disabled = false; }
+}
+$("record").onclick = () => { unlockAudio(); mediaSession(true); record(); };
+$("saveCloth").onclick = saveCloth;
+
+/* ---------- Boot ---------- */
+piece = sanitizePiece(piece, STARTER) || clone(STARTER);
+update(); renderLog(); requestAnimationFrame(frame);
+(async () => {
+  if (!window.claude || !window.claude.use) { $("aiNote").textContent = "Open this page in Claude to use the AI. The knobs work anywhere."; $("record").disabled = false; return; }
+  const [smp, dl] = await Promise.all([claude.use("sample").catch(() => null), claude.use("downloads").catch(() => null)]);
+  sample = smp; downloads = dl;
+  if (!sample) $("aiNote").textContent = "The AI isn't available in this view. The knobs, mute, solo and undo still work.";
+  if (!downloads) $("recNote").textContent = "Saving files isn't available in this view.";
+})();
+})();
+</script>
+
+</body>
+</html>
