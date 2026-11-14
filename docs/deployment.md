@@ -135,7 +135,7 @@ None are needed yet: Railway sets `PORT` itself. `ANTHROPIC_API_KEY` arrives wit
 3. Tick **Require a pull request before merging**.
 4. Tick **Require status checks to pass**, then add `check` and `smoke`. They can only be picked once CI has run at least once, which the pipeline pull request has done.
 5. Tick **Block force pushes**.
-6. Releases push a version bump straight to `main` (see Releasing). To allow that, add **Repository admin** to the **Bypass list**; otherwise make version bumps through pull requests.
+6. Releases push a version bump straight to `main` (see Releasing). To allow that, use the **Bypass list** section near the top of the same page (above **Target branches**): choose **Add bypass**, tick **Repository admin**, choose **Add selected**, then set its mode to **Always allow**. "For pull requests only" would still block the direct push. Without a bypass, make version bumps through pull requests.
 
 #### 3. Optional: protect release tags
 
