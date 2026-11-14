@@ -91,8 +91,8 @@ export function createTapestry(host: HTMLCanvasElement, tagBox: HTMLElement, onF
   const beam = new Mesh(new CylinderGeometry(0.32, 0.32, HALF * 2 + 1.1, 32), wood);
   beam.rotation.z = Math.PI / 2;
   // Light intensities are scaled by pi: three.js now uses physical light units, r128 did not.
-  scene.add(bed, beater, shuttle, beam, new HemisphereLight(0xffffff, 0x303030, 0.55 * Math.PI));
-  const sun = new DirectionalLight(0xffffff, 0.6 * Math.PI);
+  scene.add(bed, beater, shuttle, beam, new HemisphereLight(0xffffff, 0x3a3a3a, 0.6 * Math.PI));
+  const sun = new DirectionalLight(0xfff4e6, 0.7 * Math.PI);
   sun.position.set(-4, 8, -6);
   scene.add(sun);
 
@@ -145,7 +145,7 @@ export function createTapestry(host: HTMLCanvasElement, tagBox: HTMLElement, onF
     U.uWarp.value.set(T.warp);
     U.uWarp2.value.set(T.warp2);
     scene.background = new Color(T.gap);
-    wood.color.set(mix(T.shuttle, T.gap, 0.3));
+    wood.color.set(mix(T.shuttle, '#000000', 0.12));
   }
   // write one pick (a row of crossings) into the texture
   function writePick(p: number, row: Row, pk: Pick, i: number, upto: number, ghost: boolean | undefined, k2: number): void {

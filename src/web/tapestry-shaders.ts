@@ -1,4 +1,5 @@
-// Shaders for the tapestry, copied unchanged from the prototype.
+// Shaders for the tapestry, from the prototype, retuned for the daylight redesign
+// (brighter yarn lighting, livelier silent threads and preview bars).
 // Each crossing of a warp thread and a weft pick is one texel of a data
 // texture; the fragment shader draws the yarns, their twist and sheen.
 
@@ -58,7 +59,8 @@ void main(){
       float par = mod(floor(flags / 16.0), 2.0);
       bool fl = t.g > 2.5;
       vec3 base = palette(t.r);
-      if (muted) base = mix(base, uPal[0], 0.62) * 0.94;   // a silent layer: its thread, woven quietly
+      if (muted) base = mix(base, uPal[0], 0.5);   // a silent layer: its thread, woven quietly
+      else if (!fl) base = mix(base, uPal[0], 0.42);   // between hits: a softer tint, so each hit stands out in full colour
       if (fl) base = mix(base, vec3(1.0), t.a / 255.0 * 0.4); // sounding: full colour, paler for higher notes
       // weft-faced tapestry: each pick is a round yarn packed tight, rising over every other warp,
       // with neighbouring picks offset by one warp. That offset makes the pebbled rib of tapestry.
@@ -68,14 +70,14 @@ void main(){
       float prof = sqrt(max(0.0, 1.0 - across * across));
       vec3 n = normalize(vec3(-sin(ang) * 0.5 * detail, across * 0.95, prof + 0.05));
       vec3 l = normalize(LIGHT);
-      float diff = 0.34 + 0.66 * max(dot(n, l), 0.0);
+      float diff = 0.5 + 0.5 * max(dot(n, l), 0.0);
       float twist = sin(6.2831 * (c * 2.0 + across * 0.8) + rowi * 1.7);
       float fibre = 1.0 + detail * (0.07 * twist + 0.05 * (hash(vec2(floor(c * 8.0), rowi)) - 0.5));
       vec3 h = normalize(l + V);
       float th = h.x;
-      float spec = pow(sqrt(max(0.0, 1.0 - th * th)), 22.0) * (fl ? 0.42 : 0.14) * prof * (0.6 + 0.4 * und);
+      float spec = pow(sqrt(max(0.0, 1.0 - th * th)), 22.0) * (fl ? 0.5 : 0.16) * prof * (0.6 + 0.4 * und);
       col = base * diff * fibre * (0.86 + 0.14 * und * detail) + vec3(spec);
-      if (fl) col *= 1.07; else col *= 0.94 + 0.12 * (t.a / 255.0);   // small dye-lot variation from yarn to yarn
+      if (fl) col *= 1.12; else col *= 0.96 + 0.1 * (t.a / 255.0);   // small dye-lot variation from yarn to yarn
       // where a sounding thread starts or stops, the weft turns around a warp and leaves a small slit
       if (fl && mod(flags, 2.0) > 0.5) col *= mix(0.45, 1.0, smoothstep(0.0, 0.09, fx));
       if (fl && mod(floor(flags / 2.0), 2.0) > 0.5) col *= mix(0.45, 1.0, smoothstep(0.0, 0.09, 1.0 - fx));
@@ -84,7 +86,7 @@ void main(){
         float sh = 1.0 - 0.3 * smoothstep(0.35, 1.0, fy);
         col *= sh; flatC *= sh;
       }
-      if (ghost) { col = mix(col, uBg, 0.5); flatC = mix(flatC, uBg, 0.5); }
+      if (ghost) { col = mix(col, uBg, 0.32); flatC = mix(flatC, uBg, 0.32); }
     }
     col = mix(flatC, col, detail);
   }

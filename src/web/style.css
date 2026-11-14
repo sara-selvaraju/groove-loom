@@ -1,131 +1,697 @@
-/* Base reset, as the claude.ai artifact host supplied it to the prototype. */
-:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-body{margin:0;font:14px system-ui,-apple-system,"Segoe UI",sans-serif}
-img{max-width:100%}
-[hidden]{display:none!important}
+/* Groove Loom: a weaving studio in daylight.
+   The loom is the one bold thing; the room around it stays calm so the dyed threads carry the colour.
+   Light is the design target. Dark follows the device setting. */
 
-/* Layout: one column on phones; on wide screens the cloth and transport sit left, conversation and layers right. */
-:root{
-  --bg:#ECEFF5; --surface:#FFFFFF; --sunk:#E2E7F0; --ink:#151A25; --muted:#5A6377; --line:#D2D8E3;
-  --accent:#2A55D9; --accent-ink:#FFFFFF; --warn:#B23A1E; --warp:#C3CAD6; --warp2:#A9B3C4; --weft:#D9DEE7; --gap:#8C95A6; --shuttle:#A8743A;
-  --l0:#E0533D; --l1:#D98E0B; --l2:#2F9A52; --l3:#1693B0; --l4:#5468E8; --l5:#A052D4; --l6:#D4417F; --l7:#768A22;
-  --font-display:"Recursive Variable", ui-rounded, system-ui, sans-serif;
-  --font-body:"Recursive Variable", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-mono:"Recursive Variable", ui-monospace, "SF Mono", Menlo, monospace;
-  --r:14px;
+:root {
+  color-scheme: light;
+  /* The room: cool daylight, indigo ink. */
+  --bg: #f2f5fa;
+  --surface: #ffffff;
+  --sunk: #e9eef6;
+  --ink: #1d2340;
+  --muted: #5a6380;
+  --line: #d8dfea;
+  --accent: #2b3a8f;
+  --accent-ink: #ffffff;
+  --warn: #b8322a;
+  /* The loom: undyed cotton warp and ground, ash wood, a daylight studio behind. */
+  --warp: #ddd5c4;
+  --warp2: #c7bca6;
+  --weft: #efe9dd;
+  --gap: #dfe6f0;
+  --shuttle: #b8864e;
+  /* Dye pots: one per layer, ordered so neighbouring layers differ in hue. */
+  --l0: #e0303f; /* madder */
+  --l1: #f5b700; /* weld */
+  --l2: #1fae6b; /* verdigris */
+  --l3: #2f7fe0; /* woad */
+  --l4: #f57a1f; /* saffron */
+  --l5: #ec4e8a; /* cochineal */
+  --l6: #12a8b8; /* teal */
+  --l7: #8a4fd0; /* logwood */
+  --font: 'Recursive Variable', ui-rounded, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --gutter: max(16px, env(safe-area-inset-left, 0px));
 }
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#0E121A; --surface:#161B26; --sunk:#1D2330; --ink:#E7EBF3; --muted:#98A1B6; --line:#2A3243;
-  --accent:#7D9BFF; --accent-ink:#0B1020; --warn:#FF8A6B; --warp:#3A4255; --warp2:#4C576E; --weft:#2D3444; --gap:#12161E; --shuttle:#C99459; color-scheme:dark;
-}}
-:root[data-theme="dark"]{
-  --bg:#0E121A; --surface:#161B26; --sunk:#1D2330; --ink:#E7EBF3; --muted:#98A1B6; --line:#2A3243;
-  --accent:#7D9BFF; --accent-ink:#0B1020; --warn:#FF8A6B; --warp:#3A4255; --warp2:#4C576E; --weft:#2D3444; --gap:#12161E; --shuttle:#C99459; color-scheme:dark;
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+    --bg: #161d33;
+    --surface: #1e2742;
+    --sunk: #26304f;
+    --ink: #f2eee6;
+    --muted: #a6aec6;
+    --line: #333e60;
+    --accent: #9fb2ff;
+    --accent-ink: #141a30;
+    --warn: #ff8a76;
+    --warp: #5a5f73;
+    --warp2: #6c7288;
+    --weft: #3a4260;
+    --gap: #18213b;
+    --shuttle: #c99459;
+  }
 }
-*{box-sizing:border-box}
-body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.5;
-  font-variation-settings:"CASL" 0,"MONO" 0}
-.wrap{max-width:1120px;margin:0 auto;padding-block:20px 48px;
-  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
-header.top{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px}
-.brand{font-family:var(--font-display);font-size:clamp(28px,6vw,40px);font-weight:850;letter-spacing:-.02em;line-height:1;
-  font-variation-settings:"CASL" 1,"MONO" 0;margin:0}
-.brand span{color:var(--accent)}
-.tag{color:var(--muted);margin:0;font-size:14px}
-.grid{display:grid;gap:16px;grid-template-columns:1fr}
-@media (min-width:900px){.grid{grid-template-columns:minmax(0,440px) minmax(0,1fr);align-items:start}
-  .left{position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px)}}
-.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;min-width:0}
-.stack{display:flex;flex-direction:column;gap:16px;min-width:0}
-.label{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:650}
-.mono{font-family:var(--font-mono);font-variation-settings:"MONO" 1,"CASL" 0}
-.num{font-variant-numeric:tabular-nums}
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --bg: #161d33;
+  --surface: #1e2742;
+  --sunk: #26304f;
+  --ink: #f2eee6;
+  --muted: #a6aec6;
+  --line: #333e60;
+  --accent: #9fb2ff;
+  --accent-ink: #141a30;
+  --warn: #ff8a76;
+  --warp: #5a5f73;
+  --warp2: #6c7288;
+  --weft: #3a4260;
+  --gap: #18213b;
+  --shuttle: #c99459;
+}
 
-/* Cloth */
-.cloth-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:8px}
-.cloth-box{position:relative;width:100%;height:400px;border-radius:10px;overflow:hidden;background:var(--gap)}
-.cloth-box canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
-.tap-tags{position:absolute;inset:0;pointer-events:none;overflow:hidden}
-.tap-tag{position:absolute;left:0;top:0;transform-origin:0 50%;background:var(--surface);color:var(--ink);border-radius:999px;padding:2px 8px;font-size:11px;font-weight:600;white-space:nowrap;opacity:.94}
-.cloth-hint{position:absolute;left:50%;top:14px;transform:translateX(-50%);background:var(--surface);color:var(--ink);border:1px solid var(--line);
-  border-radius:999px;padding:6px 12px;font-size:13px;white-space:nowrap;pointer-events:none}
-.legend{display:flex;flex-wrap:wrap;gap:6px 14px;justify-content:center;margin-top:8px;font-size:13px;color:var(--muted)}
-.legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:1px}
+* {
+  box-sizing: border-box;
+}
+[hidden] {
+  display: none !important;
+}
+html {
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: 15px;
+  line-height: 1.5;
+  font-variation-settings: 'CASL' 0.25, 'MONO' 0;
+}
+img {
+  max-width: 100%;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.mono {
+  font-family: var(--font);
+  font-variation-settings: 'MONO' 1, 'CASL' 0;
+}
+.num {
+  font-variant-numeric: tabular-nums;
+}
+.note {
+  font-size: 13px;
+  color: var(--muted);
+  margin: 0;
+}
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
 
-/* Transport */
-.transport{display:grid;grid-template-columns:auto 1fr;gap:14px 16px;align-items:center;margin-top:14px}
-.play{width:64px;height:64px;border-radius:50%;border:0;background:var(--accent);color:var(--accent-ink);cursor:pointer;
-  display:grid;place-items:center;grid-row:span 3}
-.play svg{width:26px;height:26px;fill:currentColor}
-.play:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.ctl{display:flex;flex-direction:column;gap:2px;min-width:0}
-.ctl-row{display:flex;justify-content:space-between;gap:8px;font-size:13px}
-.ctl-row b{font-weight:650}
-.ctl-row output{color:var(--muted)}
-.keyrow{display:grid;grid-template-columns:1fr 1.4fr 1fr;gap:10px;grid-column:1/-1}
-select,input[type=range]{width:100%}
-select{font:inherit;font-size:14px;color:var(--ink);background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
-input[type=range]{accent-color:var(--accent);height:24px;margin:0}
-.tools{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
-.btn{font:inherit;font-size:14px;font-weight:600;color:var(--ink);background:var(--sunk);border:1px solid var(--line);border-radius:999px;
-  padding:8px 14px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
-.btn:hover{border-color:var(--muted)}
-.btn:disabled{opacity:.45;cursor:not-allowed}
-.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+/* ---------- Page ---------- */
 
-/* Prompt */
-.ask{display:flex;flex-direction:column;gap:10px}
-.ask-row{display:flex;gap:8px;align-items:flex-end}
-textarea{flex:1;min-width:0;font:inherit;color:var(--ink);background:var(--sunk);border:1px solid var(--line);border-radius:12px;padding:10px 12px;resize:vertical;min-height:48px}
-.chips{display:flex;gap:6px;flex-wrap:wrap}
-.chip{font:inherit;font-size:13px;color:var(--ink);background:transparent;border:1px dashed var(--line);border-radius:999px;padding:5px 11px;cursor:pointer}
-.chip:hover{border-style:solid;border-color:var(--accent)}
-.log{display:flex;flex-direction:column;gap:10px;max-height:260px;overflow-y:auto}
-.msg{font-size:14px;line-height:1.45;padding:10px 12px;border-radius:12px;max-width:92%}
-.msg.you{align-self:flex-end;background:var(--sunk)}
-.msg.loom{align-self:flex-start;background:transparent;border:1px solid var(--line)}
-.msg.err{border-color:var(--warn);color:var(--warn)}
-.msg .who{display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
-.note{font-size:13px;color:var(--muted);margin:0}
+.studio {
+  max-width: 1360px;
+  margin: 0 auto;
+  padding: 18px var(--gutter) 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.top {
+  display: flex;
+  align-items: baseline;
+  gap: 8px 18px;
+  flex-wrap: wrap;
+}
+.brand {
+  margin: 0;
+  font-size: clamp(30px, 5vw, 44px);
+  line-height: 1;
+  font-weight: 900;
+  letter-spacing: -0.025em;
+  font-variation-settings: 'CASL' 1, 'MONO' 0;
+}
+.tag {
+  margin: 0;
+  color: var(--muted);
+  font-size: 15px;
+}
+.section-title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 750;
+  font-variation-settings: 'CASL' 0.6, 'MONO' 0;
+}
+.field-label,
+.ctl-row label {
+  font-size: 13px;
+  font-weight: 650;
+  color: var(--ink);
+}
 
-/* Layers */
-.layers{display:flex;flex-direction:column;gap:10px}
-.layer{border:1px solid var(--line);border-radius:12px;padding:12px 12px 10px;background:var(--surface);min-width:0}
-.layer.off{opacity:.5}
-.lh{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.lh .sw{width:12px;height:12px;border-radius:50%;flex:none}
-.lh .nm{font-weight:700;font-size:15px;min-width:0;overflow-wrap:anywhere}
-.lh .in{font-size:12px;color:var(--muted)}
-.lh .sp{flex:1}
-.lh .btns{display:flex;gap:6px;flex:none;margin-left:auto}
-.tg{font:inherit;font-size:12px;font-weight:700;width:30px;height:28px;border-radius:8px;border:1px solid var(--line);background:var(--sunk);color:var(--ink);cursor:pointer}
-.tg[aria-pressed=true]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
-.about{font-size:13px;color:var(--muted);margin:6px 0 8px}
-.pat{font-size:12.5px;background:var(--sunk);border-radius:8px;padding:6px 8px;overflow-x:auto;white-space:nowrap;margin-bottom:8px}
-.knobs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px 12px}
-.knobs .ctl-row{font-size:12px}
-.empty{color:var(--muted);font-size:14px;padding:12px;border:1px dashed var(--line);border-radius:12px}
+/* ---------- Stage: the loom, with the conversation beside it ---------- */
 
-details.code summary{cursor:pointer;font-weight:650}
-.credits{padding:0 4px}
-.credits a{color:inherit}
-pre.code{margin:10px 0 0;background:var(--sunk);border-radius:10px;padding:12px;overflow-x:auto;font-size:12.5px;line-height:1.55}
-pre.code .c{color:var(--muted)}
-.exp{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.exp select{width:auto}
-@media (prefers-reduced-motion: reduce){.dot{transition:none}}
+.stage {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 960px) {
+  .stage {
+    grid-template-columns: minmax(0, 1.9fr) minmax(320px, 1fr);
+    align-items: stretch;
+  }
+}
 
-/* Spacing that the prototype set with inline style attributes, which the Content Security Policy blocks. */
-.rec-note{margin-top:8px}
-.layers-head{margin-bottom:10px}
-.code-note{margin-top:8px}
+.loom {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+.cloth-box {
+  position: relative;
+  width: 100%;
+  height: clamp(380px, 66vh, 760px);
+  border-radius: 22px;
+  overflow: hidden;
+  background: var(--gap);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.6) inset,
+    0 24px 48px -28px rgba(29, 35, 64, 0.45);
+}
+.cloth-box canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.tap-tags {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.tap-tag {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 0 50%;
+  background: var(--surface);
+  color: var(--ink);
+  border-radius: 999px;
+  padding: 2px 9px;
+  font-size: 12px;
+  font-weight: 650;
+  white-space: nowrap;
+  opacity: 0.95;
+  box-shadow: 0 2px 6px rgba(29, 35, 64, 0.18);
+}
+.cloth-hint {
+  position: absolute;
+  left: 50%;
+  top: 16px;
+  transform: translateX(-50%);
+  background: var(--surface);
+  color: var(--ink);
+  border-radius: 999px;
+  padding: 7px 14px;
+  font-size: 13px;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 4px 14px rgba(29, 35, 64, 0.16);
+}
+.cloth-stat {
+  position: absolute;
+  right: 14px;
+  bottom: 12px;
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  color: var(--muted);
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 12px;
+  pointer-events: none;
+}
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  justify-content: center;
+  font-size: 13px;
+  color: var(--muted);
+}
+.legend i {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 6px;
+  vertical-align: -1px;
+}
 
-/* Invite code for testers */
-.invite{display:flex;flex-direction:column;gap:6px}
-.invite input{flex:1;min-width:0;font:inherit;color:var(--ink);background:var(--sunk);border:1px solid var(--line);border-radius:12px;padding:8px 12px}
+.chat {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  padding: 18px;
+}
+.ask-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+.log {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+  min-height: 120px;
+  max-height: 340px;
+  flex: 1 1 auto;
+}
+/* Beside the loom, the conversation fills the panel's height and scrolls; the panel never spills. */
+@media (min-width: 960px) {
+  .log {
+    flex: 1 1 0;
+    max-height: none;
+  }
+}
+.msg {
+  font-size: 14px;
+  line-height: 1.45;
+  padding: 10px 13px;
+  border-radius: 16px;
+  max-width: 92%;
+}
+.msg.you {
+  align-self: flex-end;
+  background: var(--sunk);
+  border-bottom-right-radius: 6px;
+}
+.msg.loom {
+  align-self: flex-start;
+  background: transparent;
+  border: 1px solid var(--line);
+  border-bottom-left-radius: 6px;
+}
+.msg.err {
+  border-color: var(--warn);
+  color: var(--warn);
+}
+.msg .who {
+  display: block;
+  font-size: 12px;
+  font-weight: 650;
+  color: var(--muted);
+  margin-bottom: 2px;
+}
+.ask-row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+}
+textarea,
+.invite input {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  color: var(--ink);
+  background: var(--sunk);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 10px 12px;
+}
+textarea {
+  resize: vertical;
+  min-height: 50px;
+}
+.chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.chip {
+  font: inherit;
+  font-size: 13px;
+  color: var(--ink);
+  background: transparent;
+  border: 1px dashed var(--line);
+  border-radius: 999px;
+  padding: 5px 11px;
+  cursor: pointer;
+}
+.chip:hover {
+  border-style: solid;
+  border-color: var(--accent);
+}
+.invite {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.link-btn {
+  white-space: nowrap;
+  font: inherit;
+  font-size: 13px;
+  color: var(--muted);
+  background: none;
+  border: 0;
+  padding: 2px 4px;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.link-btn:hover {
+  color: var(--ink);
+}
 
-/* Chat heading with its Clear chat button */
-.ask-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
-.link-btn{font:inherit;font-size:13px;color:var(--muted);background:none;border:0;padding:2px 4px;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
-.link-btn:hover{color:var(--ink)}
-.link-btn:disabled{opacity:.45;cursor:not-allowed;text-decoration:none}
+/* ---------- Buttons and inputs ---------- */
+
+.btn {
+  font: inherit;
+  font-size: 14px;
+  font-weight: 650;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 8px 15px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.btn:hover {
+  border-color: var(--muted);
+}
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.btn.primary {
+  background: var(--accent);
+  color: var(--accent-ink);
+  border-color: var(--accent);
+}
+select {
+  font: inherit;
+  font-size: 14px;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 8px 10px;
+  width: 100%;
+}
+input[type='range'] {
+  width: 100%;
+  accent-color: var(--accent);
+  height: 24px;
+  margin: 0;
+}
+
+/* ---------- Deck: playback and the whole piece ---------- */
+
+.deck {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.deck-controls {
+  display: grid;
+  gap: 14px 22px;
+  align-items: end;
+  grid-template-columns: auto repeat(2, minmax(0, 1fr));
+}
+@media (min-width: 900px) {
+  .deck-controls {
+    grid-template-columns: auto minmax(0, 1.2fr) minmax(0, 1fr) minmax(90px, 0.6fr) minmax(150px, 1fr) minmax(0, 1fr);
+  }
+}
+.play {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: 0;
+  background: var(--accent);
+  color: var(--accent-ink);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 8px 18px -8px color-mix(in srgb, var(--accent) 80%, transparent);
+}
+/* Narrower screens: Play on its own row, then the controls in pairs, volume across the bottom. */
+@media (max-width: 899px) {
+  .deck-controls {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .play {
+    grid-column: 1 / -1;
+    justify-self: center;
+  }
+  .deck-controls > .ctl:last-child {
+    grid-column: 1 / -1;
+  }
+}
+.play svg {
+  width: 26px;
+  height: 26px;
+  fill: currentColor;
+}
+.ctl {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.ctl-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 13px;
+}
+.ctl-row output {
+  color: var(--muted);
+}
+.deck-tools {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px 16px;
+  flex-wrap: wrap;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+.tool-group {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.tool-group select {
+  width: auto;
+  border-radius: 999px;
+}
+.rec-note:empty {
+  display: none;
+}
+
+/* ---------- Layers as yarn cards ---------- */
+
+.threads {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.threads-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  padding: 0 4px;
+}
+.layers {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+}
+.layer {
+  position: relative;
+  min-width: 0;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 14px 14px 12px 32px;
+  overflow: hidden;
+}
+.layer.off {
+  opacity: 0.55;
+}
+/* The wound thread down the card's edge, like a yarn sample card. */
+.yarn {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 16px;
+  background:
+    repeating-linear-gradient(
+      168deg,
+      color-mix(in srgb, var(--thread) 100%, white 18%) 0 2px,
+      var(--thread) 2px 4px,
+      color-mix(in srgb, var(--thread) 82%, black) 4px 5px
+    );
+  box-shadow: inset -2px 0 3px rgba(0, 0, 0, 0.18);
+}
+.lh {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.lh .nm {
+  font-weight: 750;
+  font-size: 16px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-variation-settings: 'CASL' 0.6, 'MONO' 0;
+}
+.lh .in {
+  font-size: 12px;
+  color: var(--muted);
+}
+.lh .sp {
+  flex: 1;
+}
+.lh .btns {
+  display: flex;
+  gap: 6px;
+  flex: none;
+  margin-left: auto;
+}
+.tg {
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  width: 30px;
+  height: 28px;
+  border-radius: 9px;
+  border: 1px solid var(--line);
+  background: var(--sunk);
+  color: var(--ink);
+  cursor: pointer;
+}
+.tg[aria-pressed='true'] {
+  background: var(--ink);
+  color: var(--surface);
+  border-color: var(--ink);
+}
+.about {
+  font-size: 13px;
+  color: var(--muted);
+  margin: 6px 0 10px;
+}
+/* The rhythm drawn as on weaver's draft paper: one square per step, filled where it plays. */
+.draft {
+  display: grid;
+  grid-template-columns: repeat(var(--steps), minmax(0, 1fr));
+  gap: 2px;
+  margin-bottom: 6px;
+}
+.draft i {
+  aspect-ratio: 1;
+  max-height: 18px;
+  border-radius: 3px;
+  background: var(--sunk);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+.draft i.on {
+  background: var(--thread);
+  box-shadow: none;
+}
+.draft i.beat {
+  box-shadow: inset 0 0 0 1px var(--muted);
+}
+.draft i.on.beat {
+  box-shadow: none;
+}
+.pat {
+  font-size: 12px;
+  color: var(--muted);
+  overflow-x: auto;
+  white-space: nowrap;
+  margin-bottom: 10px;
+}
+.knobs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px 12px;
+}
+.knobs .ctl-row {
+  font-size: 12px;
+}
+.knobs .ctl-row label {
+  font-size: 12px;
+  font-weight: 600;
+}
+.empty {
+  color: var(--muted);
+  font-size: 14px;
+  padding: 16px;
+  border: 1px dashed var(--line);
+  border-radius: 16px;
+}
+
+/* ---------- Footer ---------- */
+
+.foot {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 0 4px;
+}
+details.code summary {
+  cursor: pointer;
+  font-weight: 650;
+}
+.code-note {
+  margin-top: 8px;
+}
+pre.code {
+  margin: 10px 0 0;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 14px;
+  overflow-x: auto;
+  font-size: 12.5px;
+  line-height: 1.55;
+}
+.credits a {
+  color: inherit;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    scroll-behavior: auto !important;
+  }
+}
