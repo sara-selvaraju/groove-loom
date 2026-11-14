@@ -37,6 +37,10 @@
             <div class="ctl-row"><label for="swing"><b>Swing</b></label><output id="swingOut" class="num">straight</output></div>
             <input type="range" id="swing" min="0" max="1" step="0.01" value="0">
           </div>
+          <div class="ctl master">
+            <div class="ctl-row"><label for="volume"><b>Overall volume</b></label><output id="volumeOut" class="num">80%</output></div>
+            <input type="range" id="volume" min="0" max="1" step="0.01" value="0.8">
+          </div>
           <div class="keyrow">
             <div class="ctl"><label class="label" for="key">Key</label><select id="key"></select></div>
             <div class="ctl"><label class="label" for="scale">Scale</label><select id="scale"></select></div>
@@ -56,7 +60,7 @@
 
     <div class="stack">
       <section class="panel ask" aria-label="Describe your music">
-        <div class="label">Tell the loom what you want</div>
+        <div class="ask-head"><span class="label">Tell the loom what you want</span><button class="link-btn" id="clearChat" type="button">Clear chat</button></div>
         <div class="log" id="log" aria-live="polite"></div>
         <form class="ask-row" id="askForm">
           <textarea id="prompt" rows="2" placeholder="e.g. throw in a syncopated trumpet"></textarea>
@@ -67,7 +71,7 @@
         <form class="invite" id="inviteForm" hidden>
           <label class="label" for="invite">Invite code</label>
           <div class="ask-row">
-            <input id="invite" type="password" autocomplete="off" spellcheck="false" />
+            <input id="invite" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" />
             <button class="btn" type="submit">Unlock the AI</button>
           </div>
         </form>
