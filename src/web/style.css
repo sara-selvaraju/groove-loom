@@ -1,6 +1,6 @@
 /* Groove Loom: a weaving studio in daylight.
    The loom is the one bold thing; the room around it stays calm so the dyed threads carry the colour.
-   Light is the design target. Dark follows the device setting. */
+   Always light, whatever the device's setting: the fabric reads best in daylight. */
 
 :root {
   color-scheme: light;
@@ -33,25 +33,8 @@
   --gutter: max(16px, env(safe-area-inset-left, 0px));
 }
 
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme='light']) {
-    color-scheme: dark;
-    --bg: #161d33;
-    --surface: #1e2742;
-    --sunk: #26304f;
-    --ink: #f2eee6;
-    --muted: #a6aec6;
-    --line: #333e60;
-    --accent: #9fb2ff;
-    --accent-ink: #141a30;
-    --warn: #ff8a76;
-    --warp: #5a5f73;
-    --warp2: #6c7288;
-    --weft: #3a4260;
-    --gap: #18213b;
-    --shuttle: #c99459;
-  }
-}
+/* Dark colours, used only if a page setting asks for them (data-theme="dark"). The page does not follow the
+   device's dark mode: the fabric reads best in daylight. */
 :root[data-theme='dark'] {
   color-scheme: dark;
   --bg: #161d33;

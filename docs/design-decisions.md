@@ -66,7 +66,7 @@ On iPhone the page played silently while the shuttle moved. Two causes, both fix
 The first redesign after the port, made because the page needed more life and the loom more room.
 
 - **The loom is the one bold thing.** It takes about two thirds of the width and most of the screen's height, with the conversation beside it. Playback and the whole-piece controls sit in one strip below; the layers sit below that as cards, several across rather than one long list.
-- **Light by default.** A cool daylight room (not warm cream) gives the fabric space, with deep indigo ink for text and buttons so the threads carry all the colour. Dark mode follows the device setting.
+- **Always light.** A cool daylight room (not warm cream) gives the fabric space, with deep indigo ink for text and buttons so the threads carry all the colour. The page does not follow the device's dark mode; dark colours remain in the stylesheet behind `data-theme="dark"` for a possible switch later.
 - **Dyed thread colours.** Eight saturated colours named after natural dyes (madder, weld, verdigris, woad, saffron, cochineal, teal, logwood), ordered so neighbouring layers differ in hue.
 - **Layers as yarn cards.** Each card has a strip of wound thread in the layer's colour, and draws its rhythm as a row of squares like weaver's draft paper, read from the compiled pattern so it always matches what plays. This shows the maths directly: "3 hits over 8 steps" is visible.
 - **Sentence case, no all-caps labels.** Recursive stays, with its casual axis used in headings.

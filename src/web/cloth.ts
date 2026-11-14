@@ -24,7 +24,6 @@ export function initCloth(): void {
     tap?.theme();
     drawCloth();
   };
-  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', retheme);
   new MutationObserver(retheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
   requestAnimationFrame(frame);
 }
