@@ -79,7 +79,7 @@ test('Share link copies a link that opens the same piece, and Undo brings back y
   await expect(page.locator('.layer')).toHaveCount(3);
   await page.click('#share');
   await expect(page.locator('#share')).toHaveText('Link copied');
-  const url = await page.evaluate(() => navigator.clipboard.readText());
+  const url = await page.evaluate<string>('navigator.clipboard.readText()');
   expect(url).toMatch(/\/#p=1\.[A-Za-z0-9_-]+$/);
 
   // a friend in their own browser, with the starter groove as their piece
@@ -88,7 +88,7 @@ test('Share link copies a link that opens the same piece, and Undo brings back y
   await friend.goto(url);
   await expect(friend.locator('.layer')).toHaveCount(3);
   await expect(friend.locator('.msg.loom').last()).toContainText('came from a shared link');
-  await expect.poll(() => friend.evaluate(() => location.hash)).toBe(''); // a reload starts from the person's own piece
+  await expect.poll(() => new URL(friend.url()).hash).toBe(''); // a reload starts from the person's own piece
   await friend.click('#undo');
   await expect(friend.locator('.layer')).toHaveCount(4);
   await friendContext.close();
