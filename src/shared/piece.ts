@@ -87,7 +87,10 @@ export const BLANK: Piece = { tempo: 100, key: 'C', scale: 'minor', swing: 0, la
 const NOTES_RE = /^[0-9\s~[\]<>,.*!@/_\-:?|()]{1,160}$/;
 const STEPS_RE = /^[x~\s[\]<>*!@/_.,()0-9?|]{1,160}$/;
 
+/** A number within lo..hi. Anything that is not a number or a numeric string gives the default d. */
 export const clamp = (v: unknown, lo: number, hi: number, d: number): number => {
+  // Number(null), Number('') and Number(true) are 0 or 1, which would silently become real values.
+  if (typeof v !== 'number' && (typeof v !== 'string' || v.trim() === '')) return d;
   const n = Number(v);
   return Number.isFinite(n) ? Math.min(hi, Math.max(lo, n)) : d;
 };

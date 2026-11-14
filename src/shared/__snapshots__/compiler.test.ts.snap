@@ -1,0 +1,611 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`layerCalls and codeFor snapshots > empty: call lists 1`] = `[]`;
+
+exports[`layerCalls and codeFor snapshots > empty: code listing 1`] = `
+"// 90 bpm in C major. One cycle = one bar of 4 beats.
+setcpm(22.5)
+
+stack(
+)"
+`;
+
+exports[`layerCalls and codeFor snapshots > solo: call lists 1`] = `
+[
+  {
+    "calls": [
+      [
+        "struct",
+        [
+          "x(4,16)",
+        ],
+      ],
+      [
+        "lpf",
+        [
+          7634,
+        ],
+      ],
+      [
+        "room",
+        [
+          0.09,
+        ],
+      ],
+      [
+        "gain",
+        [
+          0.592,
+        ],
+      ],
+    ],
+    "head": [
+      "s",
+      [
+        "kick",
+      ],
+    ],
+    "id": "a",
+  },
+  {
+    "calls": [
+      [
+        "struct",
+        [
+          "x(4,16)",
+        ],
+      ],
+      [
+        "lpf",
+        [
+          7634,
+        ],
+      ],
+      [
+        "room",
+        [
+          0.09,
+        ],
+      ],
+      [
+        "gain",
+        [
+          0.448,
+        ],
+      ],
+    ],
+    "head": [
+      "s",
+      [
+        "snare",
+      ],
+    ],
+    "id": "b",
+  },
+  {
+    "calls": [
+      [
+        "scale",
+        [
+          "C4:minor",
+        ],
+      ],
+      [
+        "s",
+        [
+          "piano",
+        ],
+      ],
+      [
+        "release",
+        [
+          0.5,
+        ],
+      ],
+      [
+        "lpf",
+        [
+          7634,
+        ],
+      ],
+      [
+        "room",
+        [
+          0.09,
+        ],
+      ],
+      [
+        "gain",
+        [
+          3.2,
+        ],
+      ],
+    ],
+    "head": [
+      "n",
+      [
+        "0 2 4",
+      ],
+    ],
+    "id": "c",
+  },
+]
+`;
+
+exports[`layerCalls and codeFor snapshots > solo: code listing 1`] = `
+"// 100 bpm in C minor. One cycle = one bar of 4 beats.
+// Recorded sounds such as s("kick") are loaded with samples() from files published with this page.
+setcpm(25)
+
+stack(
+  // Kick drum
+  s("kick").struct("x(4,16)").lpf(7634).room(0.09).gain(0.592),
+  // Snare drum (muted)
+  // s("snare").struct("x(4,16)").lpf(7634).room(0.09).gain(0.448),
+  // Piano (muted)
+  // n("0 2 4").scale("C4:minor").s("piano").release(0.5).lpf(7634).room(0.09).gain(3.2),
+)"
+`;
+
+exports[`layerCalls and codeFor snapshots > starter: call lists 1`] = `
+[
+  {
+    "calls": [
+      [
+        "struct",
+        [
+          "x(4,16)",
+        ],
+      ],
+      [
+        "lpf",
+        [
+          6000,
+        ],
+      ],
+      [
+        "gain",
+        [
+          0.629,
+        ],
+      ],
+    ],
+    "head": [
+      "s",
+      [
+        "kick",
+      ],
+    ],
+    "id": "kick",
+  },
+  {
+    "calls": [
+      [
+        "struct",
+        [
+          "~ x ~ x",
+        ],
+      ],
+      [
+        "lpf",
+        [
+          6000,
+        ],
+      ],
+      [
+        "room",
+        [
+          0.135,
+        ],
+      ],
+      [
+        "gain",
+        [
+          0.42,
+        ],
+      ],
+    ],
+    "head": [
+      "s",
+      [
+        "snare",
+      ],
+    ],
+    "id": "snare",
+  },
+  {
+    "calls": [
+      [
+        "struct",
+        [
+          "[~ x]*4",
+        ],
+      ],
+      [
+        "cut",
+        [
+          1,
+        ],
+      ],
+      [
+        "lpf",
+        [
+          6000,
+        ],
+      ],
+      [
+        "gain",
+        [
+          0.399,
+        ],
+      ],
+    ],
+    "head": [
+      "s",
+      [
+        "hihat",
+      ],
+    ],
+    "id": "hats",
+  },
+  {
+    "calls": [
+      [
+        "struct",
+        [
+          "x(3,8)",
+        ],
+      ],
+      [
+        "scale",
+        [
+          "A2:minor",
+        ],
+      ],
+      [
+        "s",
+        [
+          "ebass",
+        ],
+      ],
+      [
+        "release",
+        [
+          0.12,
+        ],
+      ],
+      [
+        "lpf",
+        [
+          4447,
+        ],
+      ],
+      [
+        "gain",
+        [
+          1.488,
+        ],
+      ],
+    ],
+    "head": [
+      "n",
+      [
+        "<0 0 5 3>",
+      ],
+    ],
+    "id": "bass",
+  },
+]
+`;
+
+exports[`layerCalls and codeFor snapshots > starter: code listing 1`] = `
+"// 100 bpm in A minor. One cycle = one bar of 4 beats.
+// Recorded sounds such as s("kick") are loaded with samples() from files published with this page.
+setcpm(25)
+
+stack(
+  // Kick
+  s("kick").struct("x(4,16)").lpf(6000).gain(0.629),
+  // Snare
+  s("snare").struct("~ x ~ x").lpf(6000).room(0.135).gain(0.42),
+  // Hi-hats
+  s("hihat").struct("[~ x]*4").cut(1).lpf(6000).gain(0.399),
+  // Bass
+  n("<0 0 5 3>").struct("x(3,8)").scale("A2:minor").s("ebass").release(0.12).lpf(4447).gain(1.488),
+)"
+`;
+
+exports[`layerCalls and codeFor snapshots > synths: call lists 1`] = `
+[
+  {
+    "calls": [
+      [
+        "struct",
+        [
+          "x(4,16)",
+        ],
+      ],
+      [
+        "decay",
+        [
+          0.4,
+        ],
+      ],
+      [
+        "room",
+        [
+          0.09,
+        ],
+      ],
+      [
+        "gain",
+        [
+          1,
+        ],
+      ],
+    ],
+    "head": [
+      "s",
+      [
+        "sbd",
+      ],
+    ],
+    "id": "k",
+  },
+  {
+    "calls": [
+      [
+        "struct",
+        [
+          "[~ x]*4",
+        ],
+      ],
+      [
+        "hpf",
+        [
+          8000,
+        ],
+      ],
+      [
+        "attack",
+        [
+          0.001,
+        ],
+      ],
+      [
+        "decay",
+        [
+          0.035,
+        ],
+      ],
+      [
+        "sustain",
+        [
+          0,
+        ],
+      ],
+      [
+        "lpf",
+        [
+          15720,
+        ],
+      ],
+      [
+        "room",
+        [
+          0.09,
+        ],
+      ],
+      [
+        "gain",
+        [
+          0.16,
+        ],
+      ],
+    ],
+    "head": [
+      "s",
+      [
+        "white",
+      ],
+    ],
+    "id": "h",
+  },
+  {
+    "calls": [
+      [
+        "scale",
+        [
+          "F#1:dorian",
+        ],
+      ],
+      [
+        "s",
+        [
+          "sawtooth",
+        ],
+      ],
+      [
+        "attack",
+        [
+          0.005,
+        ],
+      ],
+      [
+        "decay",
+        [
+          0.18,
+        ],
+      ],
+      [
+        "sustain",
+        [
+          0.5,
+        ],
+      ],
+      [
+        "release",
+        [
+          0.08,
+        ],
+      ],
+      [
+        "lpf",
+        [
+          994,
+        ],
+      ],
+      [
+        "room",
+        [
+          0.09,
+        ],
+      ],
+      [
+        "gain",
+        [
+          0.385,
+        ],
+      ],
+    ],
+    "head": [
+      "n",
+      [
+        "0 ~ 0 3",
+      ],
+    ],
+    "id": "b",
+  },
+  {
+    "calls": [
+      [
+        "scale",
+        [
+          "F#3:dorian",
+        ],
+      ],
+      [
+        "s",
+        [
+          "supersaw",
+        ],
+      ],
+      [
+        "attack",
+        [
+          0.4,
+        ],
+      ],
+      [
+        "sustain",
+        [
+          0.8,
+        ],
+      ],
+      [
+        "release",
+        [
+          1.2,
+        ],
+      ],
+      [
+        "lpf",
+        [
+          6000,
+        ],
+      ],
+      [
+        "room",
+        [
+          0.72,
+        ],
+      ],
+      [
+        "gain",
+        [
+          0.112,
+        ],
+      ],
+    ],
+    "head": [
+      "n",
+      [
+        "<[0,2,4] [3,5,7]>",
+      ],
+    ],
+    "id": "p",
+  },
+  {
+    "calls": [
+      [
+        "struct",
+        [
+          "x(3,8,2)",
+        ],
+      ],
+      [
+        "scale",
+        [
+          "F#4:dorian",
+        ],
+      ],
+      [
+        "s",
+        [
+          "trumpet",
+        ],
+      ],
+      [
+        "release",
+        [
+          0.15,
+        ],
+      ],
+      [
+        "lpf",
+        [
+          7634,
+        ],
+      ],
+      [
+        "room",
+        [
+          0.09,
+        ],
+      ],
+      [
+        "gain",
+        [
+          1.872,
+        ],
+      ],
+    ],
+    "head": [
+      "n",
+      [
+        "4 ~ 2 ~",
+      ],
+    ],
+    "id": "br",
+  },
+]
+`;
+
+exports[`layerCalls and codeFor snapshots > synths: code listing 1`] = `
+"// 128 bpm in F# dorian. One cycle = one bar of 4 beats.
+// Recorded sounds such as s("trumpet") are loaded with samples() from files published with this page.
+setcpm(32)
+
+stack(
+  // Kick
+  s("sbd").struct("x(4,16)").decay(0.4).room(0.09).gain(1),
+  // Hats (muted)
+  // s("white").struct("[~ x]*4").hpf(8000).attack(0.001).decay(0.035).sustain(0).lpf(15720).room(0.09).gain(0.16),
+  // Bass
+  n("0 ~ 0 3").scale("F#1:dorian").s("sawtooth").attack(0.005).decay(0.18).sustain(0.5).release(0.08).lpf(994).room(0.09).gain(0.385),
+  // Pad
+  n("<[0,2,4] [3,5,7]>").scale("F#3:dorian").s("supersaw").attack(0.4).sustain(0.8).release(1.2).lpf(6000).room(0.72).gain(0.112),
+  // Brass
+  n("4 ~ 2 ~").struct("x(3,8,2)").scale("F#4:dorian").s("trumpet").release(0.15).lpf(7634).room(0.09).gain(1.872),
+).swingBy(0.2, 8)"
+`;
