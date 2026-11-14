@@ -39,9 +39,12 @@ const layer = {
     space: { type: 'number' },
     octave: { type: 'integer' },
     muted: { type: 'boolean' },
+    echo: { type: 'number' },
+    grit: { type: 'number' },
+    accent: { anyOf: [{ type: 'string' }, { type: 'null' }] },
     about: { type: 'string' },
   },
-  required: ['id', 'name', 'instrument', 'notes', 'rhythm', 'volume', 'tone', 'space', 'octave', 'muted', 'about'],
+  required: ['id', 'name', 'instrument', 'notes', 'rhythm', 'volume', 'tone', 'space', 'octave', 'muted', 'echo', 'grit', 'accent', 'about'],
   additionalProperties: false,
 } as const;
 

@@ -38,7 +38,7 @@ const EXAMPLES: Record<string, Piece> = {
 describe('layerCalls and codeFor snapshots', () => {
   for (const [name, p] of Object.entries(EXAMPLES)) {
     it(`${name}: call lists`, () => {
-      expect(p.layers.map((L) => ({ id: L.id, ...layerCalls(L, p) }))).toMatchSnapshot();
+      expect(p.layers.map((L, i) => ({ id: L.id, ...layerCalls(L, p, i) }))).toMatchSnapshot();
     });
     it(`${name}: code listing`, () => {
       expect(codeFor(p)).toMatchSnapshot();
@@ -50,8 +50,8 @@ describe('one call list drives the sound and the listing', () => {
   it('lists every call layerCalls produces, in order, for each layer', () => {
     const p = EXAMPLES.synths!;
     const code = codeFor(p);
-    for (const L of p.layers) {
-      const { head, calls } = layerCalls(L, p);
+    for (const [i, L] of p.layers.entries()) {
+      const { head, calls } = layerCalls(L, p, i);
       const methods = [head[0], ...calls.map((c) => c[0])];
       const line = code.split('\n').find((l) => l.includes(`${head[0]}(${JSON.stringify(head[1][0])})`) && l.includes(`gain(`));
       expect(line, `listing line for ${L.id}`).toBeDefined();
@@ -69,14 +69,14 @@ describe('tone', () => {
 
   it('leaves the filter off when the tone is fully open', () => {
     const p = piece({ layers: [{ instrument: 'kick', tone: 1 }] });
-    expect(layerCalls(p.layers[0]!, p).calls.map((c) => c[0])).not.toContain('lpf');
+    expect(layerCalls(p.layers[0]!, p, 0).calls.map((c) => c[0])).not.toContain('lpf');
   });
 
   it('adds reverb only above a small threshold', () => {
     const quiet = piece({ layers: [{ instrument: 'kick', space: 0.02 }] });
     const wet = piece({ layers: [{ instrument: 'kick', space: 0.5 }] });
-    expect(layerCalls(quiet.layers[0]!, quiet).calls.map((c) => c[0])).not.toContain('room');
-    expect(layerCalls(wet.layers[0]!, wet).calls).toContainEqual(['room', [0.45]]);
+    expect(layerCalls(quiet.layers[0]!, quiet, 0).calls.map((c) => c[0])).not.toContain('room');
+    expect(layerCalls(wet.layers[0]!, wet, 0).calls).toContainEqual(['room', [0.45]]);
   });
 });
 
@@ -126,5 +126,35 @@ describe('patternText', () => {
       'rhythm [~ x]*4',
       'notes <0 0 5 3>   rhythm x(3,8)   (3 hits over 8 steps)',
     ]);
+  });
+});
+
+describe('echo, grit and accents', () => {
+  const layer = (extra: Record<string, unknown>) => piece({ layers: [{ instrument: 'kick', ...extra }] });
+  const calls = (p: Piece) => layerCalls(p.layers[0]!, p, 0).calls;
+
+  it('adds echo as a delay with feedback that grows with the amount', () => {
+    expect(calls(layer({ echo: 0.5 }))).toEqual(expect.arrayContaining([['delay', [0.3]], ['delayfeedback', [0.425]]]));
+    expect(calls(layer({ echo: 0 })).map((c) => c[0])).not.toContain('delay');
+  });
+
+  it('adds grit as shape and brings the level down to match', () => {
+    const clean = calls(layer({ grit: 0, volume: 1 })).find((c) => c[0] === 'gain')![1][0] as number;
+    const gritty = calls(layer({ grit: 1, volume: 1 }));
+    expect(gritty).toContainEqual(['shape', [0.75]]);
+    expect(gritty.find((c) => c[0] === 'gain')![1][0]).toBeCloseTo(clean * 0.45, 3);
+  });
+
+  it('adds accents as velocity', () => {
+    expect(calls(layer({ accent: '[1 .55]*4' }))).toContainEqual(['velocity', ['[1 .55]*4']]);
+  });
+
+  it('gives each layer its own effects channel, in order', () => {
+    const p = EXAMPLES.starter!;
+    expect(p.layers.map((L, i) => layerCalls(L, p, i).calls.at(-1))).toEqual([['orbit', [1]], ['orbit', [2]], ['orbit', [3]], ['orbit', [4]]]);
+  });
+
+  it('shows accents on the layer card readout', () => {
+    expect(patternText(layer({ accent: '1 .6' }).layers[0]!)).toContain('accent 1 .6');
   });
 });

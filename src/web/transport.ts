@@ -1,5 +1,5 @@
 // Play and stop.
-import { audioContext, ready, withSounds } from './audio.js';
+import { audioContext, effectsReady, ready, withSounds } from './audio.js';
 import { drawCloth } from './cloth.js';
 import { $, state } from './state.js';
 
@@ -14,7 +14,7 @@ export async function setPlaying(on: boolean): Promise<void> {
     } catch {
       // resumed by the tap instead
     }
-    await withSounds(state.piece);
+    await Promise.all([withSounds(state.piece), effectsReady()]);
     const compiled = state.compiled!;
     state.repl.setCps(compiled.cps);
     await state.repl.setPattern(compiled.pattern, true);

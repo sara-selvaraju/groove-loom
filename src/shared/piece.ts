@@ -18,6 +18,12 @@ export interface Layer {
   octave: number;
   muted: boolean;
   solo: boolean;
+  /** Echo repeats, 0..1. They fall on the dotted eighth, timed to the tempo. */
+  echo: number;
+  /** Saturation through to distortion, 0..1. */
+  grit: number;
+  /** Louder and softer hits: numbers 0..1 in mini-notation, or null for even. */
+  accent: string | null;
   rhythm: Rhythm | null;
   /** Scale degrees in mini-notation; pitched instruments only. */
   notes?: string;
@@ -86,6 +92,13 @@ export const BLANK: Piece = { tempo: 100, key: 'C', scale: 'minor', swing: 0, la
 
 const NOTES_RE = /^[0-9\s~[\]<>,.*!@/_\-:?|()]{1,160}$/;
 const STEPS_RE = /^[x~\s[\]<>*!@/_.,()0-9?|]{1,160}$/;
+const ACCENT_RE = /^[0-9\s~[\]<>,.*!@/_:?|()]{1,120}$/;
+
+/** Accent levels must be 0..1. Numbers after *, /, !, @ or : are counts, not levels. */
+function accentLevelsOk(source: string): boolean {
+  for (const m of source.matchAll(/([*/!@:]?)(\d*\.\d+|\d+)/g)) if (!m[1] && Number(m[2]) > 1) return false;
+  return true;
+}
 
 /** A number within lo..hi. Anything that is not a number or a numeric string gives the default d. */
 export const clamp = (v: unknown, lo: number, hi: number, d: number): number => {
@@ -144,8 +157,13 @@ export function sanitizePiece(
       octave: Math.round(clamp(raw.octave, -2, 2, 0)),
       muted: !!raw.muted,
       solo: !!raw.solo,
+      echo: clamp(raw.echo, 0, 1, 0),
+      grit: clamp(raw.grit, 0, 1, 0),
+      accent: null,
       rhythm: null,
     };
+    const accent = typeof raw.accent === 'string' ? raw.accent.trim() : '';
+    if (accent && ACCENT_RE.test(accent) && accentLevelsOk(accent) && parsesAsMini(accent)) L.accent = accent;
     const r = raw.rhythm;
     if (isObject(r) && r.mode === 'euclid') {
       const steps = Math.round(clamp(r.steps, 1, 32, 8));

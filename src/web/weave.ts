@@ -99,7 +99,7 @@ function sigOf(p: Piece): Signature {
   return {
     g: `${p.tempo}|${p.key}|${p.scale}|${Math.round(p.swing * 20)}`,
     l: Object.fromEntries(
-      p.layers.map((L) => [L.id, { name: L.name, s: JSON.stringify([L.instrument, L.notes, L.rhythm, L.muted, L.solo, L.octave]) }]),
+      p.layers.map((L) => [L.id, { name: L.name, s: JSON.stringify([L.instrument, L.notes, L.rhythm, L.accent, L.muted, L.solo, L.octave]) }]),
     ),
   };
 }

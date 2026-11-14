@@ -21,7 +21,8 @@ export interface LayerCalls {
   calls: Call[];
 }
 
-export function layerCalls(L: Layer, p: Piece): LayerCalls {
+/** index = the layer's position: each layer gets its own effects channel (orbit), so one layer's echo and reverb don't spill into another's. */
+export function layerCalls(L: Layer, p: Piece, index: number): LayerCalls {
   const inst = INSTR[L.instrument]!;
   const rhythm = rhythmMini(L.rhythm);
   const calls: Call[] = [];
@@ -36,9 +37,18 @@ export function layerCalls(L: Layer, p: Piece): LayerCalls {
     calls.push(['s', [inst.sound]]);
   }
   for (const c of inst.params) calls.push([c[0], [c[1]]]);
+  if (L.accent) calls.push(['velocity', [L.accent]]);
   if (toneHz(L.tone) < 19000) calls.push(['lpf', [toneHz(L.tone)]]);
   if (L.space > 0.02) calls.push(['room', [r3(L.space * 0.9)]]);
-  calls.push(['gain', [r3(L.volume * inst.gain)]]);
+  if (L.echo > 0.02) {
+    // Repeats fall on the dotted eighth (Strudel's default delay timing, synced to the tempo).
+    calls.push(['delay', [r3(L.echo * 0.6)]]);
+    calls.push(['delayfeedback', [r3(0.2 + L.echo * 0.45)]]);
+  }
+  // Grit drives the signal harder, so the level comes down to keep the layer from simply getting louder.
+  if (L.grit > 0.02) calls.push(['shape', [r3(L.grit * 0.75)]]);
+  calls.push(['gain', [r3(L.volume * inst.gain * (1 - 0.55 * L.grit))]]);
+  calls.push(['orbit', [index + 1]]);
   return { head, calls };
 }
 
@@ -63,7 +73,7 @@ export function codeFor(p: Piece): string {
     lines.push(`// Recorded sounds such as s("${recorded.sound}") are loaded with samples() from files published with this page.`);
   lines.push(`setcpm(${r3(p.tempo / 4)})`, ``, `stack(`);
   p.layers.forEach((L, i) => {
-    const { head, calls } = layerCalls(L, p);
+    const { head, calls } = layerCalls(L, p, i);
     const s = `${head[0]}(${head[1].map(fmtArg).join(', ')})` + calls.map(([m, a]) => `.${m}(${a.map(fmtArg).join(', ')})`).join('');
     lines.push(`  // ${L.name}${on[i] ? '' : ' (muted)'}`);
     lines.push(`  ${on[i] ? '' : '// '}${s},`);
@@ -79,6 +89,7 @@ export function patternText(L: Layer): string {
   return [
     inst.kind === 'tone' ? `notes ${L.notes}` : null,
     rm ? `rhythm ${rm}` : null,
+    L.accent ? `accent ${L.accent}` : null,
     L.rhythm?.mode === 'euclid' ? `(${L.rhythm.hits} hits over ${L.rhythm.steps} steps)` : null,
   ]
     .filter(Boolean)
