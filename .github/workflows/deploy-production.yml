@@ -59,8 +59,18 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version-file: .node-version
+          cache: npm
+      # The railway package evaluates .railway/railway.ts.
+      - run: npm ci
       - name: Install the Railway CLI
         run: npm install --global @railway/cli@5.74.0
+      # Bring production's settings in line with .railway/railway.ts before
+      # deploying. No --confirm-destructive: a change that would delete
+      # something stops the release.
+      - name: Apply Railway config
+        run: |
+          railway config plan --environment production --verbose
+          railway config apply --environment production --yes
       - name: Deploy to Railway
         run: railway up --ci --service "$RAILWAY_SERVICE" --environment production
       - name: Wait for the new version to go live

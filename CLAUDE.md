@@ -10,7 +10,7 @@ The repo is meant to be forked. Licence is AGPL-3.0 to match Strudel.
 
 ## Current state
 
-**App skeleton (task 1).** A Vite + TypeScript front end in `src/web`, a Hono server in `src/server` (serves `dist/web` and `/healthz`, sets a strict Content Security Policy), CI in `.github/workflows/ci.yml`, production deploys from tags in `.github/workflows/deploy-production.yml`, and Railway settings in `railway.json`. Code shared by front end and server (for example `sanitizePiece`) goes in `src/shared`; the server is bundled with esbuild so it can import it. TypeScript stays on 6.0.x until typescript-eslint supports 7. How the pipeline works, how to release and the one-off dashboard setup are in [docs/deployment.md](docs/deployment.md). The front end is still a placeholder page.
+**App skeleton (task 1).** A Vite + TypeScript front end in `src/web`, a Hono server in `src/server` (serves `dist/web` and `/healthz`, sets a strict Content Security Policy), CI in `.github/workflows/ci.yml`, production deploys from tags in `.github/workflows/deploy-production.yml`, and Railway settings in `.railway/railway.ts` (Railway infrastructure as code, applied by CI; `railway.json` is deprecated and ignored by new services). Code shared by front end and server (for example `sanitizePiece`) goes in `src/shared`; the server is bundled with esbuild so it can import it. TypeScript stays on 6.0.x until typescript-eslint supports 7. How the pipeline works, how to release and the one-off dashboard setup are in [docs/deployment.md](docs/deployment.md). The front end is still a placeholder page.
 
 **Prototype.** `prototype/index.html` is a working single-file prototype (about 1,240 lines), originally a claude.ai artifact. It is the reference implementation: behaviour, look and copy are all agreed. Do not treat it as throwaway; port it.
 
@@ -68,7 +68,7 @@ These exist only because the prototype ran inside the claude.ai artifact sandbox
 
 Decided:
 
-- **Hosting: Railway**, one service to start: a small Node server (for example Hono) that serves the built front end, `/api/compose` and `/healthz`. Build, start and health check settings live in config as code (`railway.json`), not only in the dashboard.
+- **Hosting: Railway**, one service to start: a small Node server (for example Hono) that serves the built front end, `/api/compose` and `/healthz`. Build, start, health check and branch trigger settings live in code (`.railway/railway.ts`, applied by CI), not only in the dashboard.
 - **CI/CD: GitHub Actions for checks, Railway for deploys.**
   - CI runs on every pull request and on every push to `main`: install, lint, typecheck, unit tests, build, and a headless browser smoke test (page loads, plays, tapestry draws, no console errors).
   - **Staging** autodeploys from `main` with Railway's **Wait for CI** setting on, so a commit deploys only after every workflow on it passes; a failed run leaves the previous version running.

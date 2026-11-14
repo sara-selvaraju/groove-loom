@@ -1,0 +1,68 @@
+name: Railway config
+
+# Keeps staging's Railway settings in step with .railway/railway.ts.
+# A pull request that changes the file shows the plan; merging applies it.
+# Production is applied by the release workflow instead, after approval.
+on:
+  pull_request:
+    paths: ['.railway/**', '.github/workflows/railway-config.yml']
+  push:
+    branches: [main]
+    paths: ['.railway/**', '.github/workflows/railway-config.yml']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: railway-config-staging
+  cancel-in-progress: false
+
+env:
+  RAILWAY_CLI_VERSION: 5.74.0
+
+jobs:
+  plan:
+    name: plan (staging)
+    # Fork pull requests get no secrets, so there is nothing to plan with.
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      RAILWAY_TOKEN: ${{ secrets.RAILWAY_STAGING_TOKEN }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+          cache: npm
+      - run: npm ci
+      - run: npm install --global "@railway/cli@$RAILWAY_CLI_VERSION"
+      - name: Plan
+        run: |
+          railway config plan --environment staging --verbose | tee plan.txt
+          {
+            echo '### Railway plan for staging'
+            echo '```'
+            cat plan.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  apply:
+    name: apply (staging)
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      RAILWAY_TOKEN: ${{ secrets.RAILWAY_STAGING_TOKEN }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+          cache: npm
+      - run: npm ci
+      - run: npm install --global "@railway/cli@$RAILWAY_CLI_VERSION"
+      # No --confirm-destructive: a change that would delete something fails
+      # here and has to be applied by hand after a look.
+      - name: Apply
+        run: railway config apply --environment staging --yes
