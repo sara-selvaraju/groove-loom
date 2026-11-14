@@ -34,38 +34,117 @@ In Railway, open the service in the `production` environment, find the last good
 
 ## One-off setup
 
-These steps are done once, in the Railway and GitHub dashboards. They cannot live in the repo.
+These steps are done once, in the Railway and GitHub dashboards. They cannot live in the repo. Do them in order: the Railway part produces values that the GitHub part needs.
+
+### Before starting
+
+- A Railway account, signed in with GitHub.
+- The GitHub repository set to **public**. Required reviewers on a GitHub environment, which gate production, are not available for private repositories outside GitHub Enterprise.
+- The pipeline pull request open but **not merged**. Merging deploys to staging, so production must be disconnected from `main` first (Railway step 3).
 
 ### Railway
 
-1. Create a project from the GitHub repo, installing the Railway GitHub app with access to `groove-loom`. This creates one service and an environment called `production`.
-2. Add an environment called `staging` (duplicate `production`).
-3. In `staging`, open the service's **Settings → Source**: set the branch to `main` and turn on **Wait for CI**. Generate a public domain.
-4. In `production`, open the service's **Settings → Source** and **disconnect the branch trigger**. Production must only change through the tag workflow; without this step every merge to `main` would also deploy to production. Generate a public domain.
-5. In **Project Settings → Environments**, turn on PR environments and set the base environment to `staging`. PR environments copy the base environment's variables, so previews get staging's API key, never production's.
-6. In **Project Settings → Tokens**, create a project token scoped to the `production` environment. It is used by GitHub below.
-7. No variables are needed yet; Railway sets `PORT`. `ANTHROPIC_API_KEY` arrives with the composer, as a separate key per environment, each with a spend limit in the Anthropic Console.
+#### 1. Create the project
+
+1. In Railway, choose **New Project → Deploy from GitHub repo**.
+2. If `groove-loom` is not listed, choose **Configure GitHub App** and give the Railway app access to the repository, then pick it.
+3. Railway creates a project with one service (named after the repository, for example `groove-loom`) in an environment called `production`, and immediately tries to deploy `main`.
+
+**Expect that first deploy to fail** with "Railpack failed to prepare the build". Until the pipeline pull request is merged, `main` has no `package.json`, so there is nothing to build. Leave it; do not retry it.
+
+**Note down:** the service name, shown at the top of the service panel. GitHub needs it as `RAILWAY_SERVICE`.
+
+#### 2. Add a staging environment
+
+1. Open the environment menu at the top of the project page (it shows `production`).
+2. Choose **New Environment**, name it `staging`, and choose **Duplicate Environment** from `production`. This copies the service and its settings.
+3. Switch the environment menu to `staging`. Every remaining step in this subsection is done in `staging`.
+4. Click the service, then open **Settings**.
+5. Under **Source**, check the connected repository is `groove-loom` and the connected branch is `main`.
+6. Under the branch, turn on **Wait for CI**. Railway then holds each deploy until every GitHub Actions workflow on that commit has passed. If the option is missing, it is because `main` has no workflows yet; it appears once the pipeline pull request is merged, so come back and turn it on then.
+7. Under **Networking → Public Networking**, choose **Generate Domain**. If asked for a port, enter `8080` (Railway passes the app its port in `PORT`, usually 8080).
+
+**Check:** the staging service shows a `.up.railway.app` address under Networking. Opening it shows a Railway error page until the first staging deploy; that is expected.
+
+**Note down:** the staging address.
+
+#### 3. Disconnect production from `main`
+
+1. Switch the environment menu to `production`.
+2. Click the service, then open **Settings**.
+3. Under **Source**, find the branch connected to `production` and choose **Disconnect** for the branch. Keep the repository connection itself.
+4. Under **Networking → Public Networking**, choose **Generate Domain**, with port `8080` if asked.
+
+Production now only changes when the tag workflow runs `railway up`. Without this step, every merge to `main` would deploy to production as well as staging.
+
+**Check:** **Settings → Source** in `production` no longer shows a branch that triggers deploys, while `staging` still shows `main`.
+
+**Note down:** the production address.
+
+#### 4. Turn on PR environments
+
+1. Open **Project Settings** (the cog at the top of the project page) and go to **Environments**.
+2. Turn on **PR Environments**.
+3. Set the **base environment** to `staging`.
+4. Leave PR environments for bot pull requests (such as Dependabot) off.
+
+PR environments copy the base environment's variables. With `staging` as the base, previews get staging's API key, never production's.
+
+**Check:** the next push to an open pull request creates a temporary environment for it in the environment menu, and Railway deletes it when the pull request closes.
+
+#### 5. Create the production deploy token
+
+1. In **Project Settings**, go to **Tokens**.
+2. Create a token named `github-actions-production`, with the environment set to `production`.
+3. Copy the token straight away; Railway shows it once.
+
+This token can deploy to `production` and nothing else. It goes into GitHub as an environment secret, so a workflow can only read it after a release has been approved.
+
+**Note down:** the token, somewhere temporary (it is pasted into GitHub next and should not be kept anywhere else).
+
+#### 6. Variables
+
+None are needed yet: Railway sets `PORT` itself. `ANTHROPIC_API_KEY` arrives with the composer, as a separate key per environment (`staging` and `production`), each with a spend limit in the Anthropic Console.
+
+### Values for GitHub
+
+| Value | Where it came from | Used as |
+|---|---|---|
+| Service name, for example `groove-loom` | Railway step 1 | `RAILWAY_SERVICE` variable |
+| Production address | Railway step 3 | `PRODUCTION_URL` variable, written as `https://<address>` with no trailing slash |
+| Production token | Railway step 5 | `RAILWAY_TOKEN` secret |
+| Staging address | Railway step 2 | Not needed by GitHub; used to check staging after merging |
 
 ### GitHub
 
-The repository must be public (or on GitHub Enterprise) for required reviewers on environments.
+#### 1. Create the production environment
 
-1. **Settings → Environments → New environment** named `production`:
-   - Required reviewers: the project owner. Leave **Prevent self-review** off so the owner can approve their own releases.
-   - Deployment branches and tags: **Selected branches and tags**, add a tag rule for `v*`.
-   - Environment secret `RAILWAY_TOKEN`: the project token from Railway step 6.
-   - Environment variable `RAILWAY_SERVICE`: the service name shown in Railway.
-   - Environment variable `PRODUCTION_URL`: the production domain with `https://` and no trailing slash, for example `https://groove-loom-production.up.railway.app`.
-2. **Settings → Rules → Rulesets → New branch ruleset** targeting `main`:
-   - Require a pull request before merging.
-   - Require status checks to pass: `check` and `smoke` (they can be picked once CI has run at least once).
-   - Block force pushes.
-   - Add the repository admin to the bypass list if version bumps are pushed straight to `main` (see Releasing).
-3. Optional: a tag ruleset on `v*` restricting who can create release tags.
+1. In the repository, open **Settings → Environments → New environment** and name it `production` (it must match the name in the workflow).
+2. Tick **Required reviewers** and add the project owner. Leave **Prevent self-review** off, so the owner can approve their own releases. Save the protection rules.
+3. Under **Deployment branches and tags**, choose **Selected branches and tags**, then **Add deployment branch or tag rule**, pick **Tag**, and enter `v*`.
+4. Under **Environment secrets**, add `RAILWAY_TOKEN` with the token from Railway step 5. Then delete the temporary copy.
+5. Under **Environment variables**, add `RAILWAY_SERVICE` (the service name) and `PRODUCTION_URL` (for example `https://groove-loom-production.up.railway.app`).
 
-### After the first deploys
+#### 2. Protect `main`
 
-Railway only applies `railway.json` once it has deployed a commit that contains it. After the first staging deploy (and, for production, the first release), open the service's **Settings** in that environment and check that the build command, start command, health check and restart policy show as set by the config file.
+1. Open **Settings → Rules → Rulesets → New ruleset → New branch ruleset**.
+2. Name it `main`, set **Enforcement status** to Active, and under **Target branches** add the default branch.
+3. Tick **Require a pull request before merging**.
+4. Tick **Require status checks to pass**, then add `check` and `smoke`. They can only be picked once CI has run at least once, which the pipeline pull request has done.
+5. Tick **Block force pushes**.
+6. Releases push a version bump straight to `main` (see Releasing). To allow that, add **Repository admin** to the **Bypass list**; otherwise make version bumps through pull requests.
+
+#### 3. Optional: protect release tags
+
+A tag ruleset targeting `v*` that restricts creation to admins stops anyone else starting a production release.
+
+## First run
+
+1. **Merge the pipeline pull request.** CI runs on the merge commit, then Railway deploys staging. Watch it under the service's **Deployments** in `staging`.
+2. **Check staging.** Open the staging address. The page should say "Server is up: version 0.1.0" followed by a short build code. If **Wait for CI** was missing in Railway step 2, turn it on now.
+3. **Check `railway.json` is in use.** Railway only applies the file once it has deployed a commit containing it. In `staging`, open the service's **Settings** and check that the build command, start command, health check and restart policy show as set by the config file.
+4. **Release.** On an up-to-date `main`, run `npm version patch && git push --follow-tags`, or tag the current version with `git tag v0.1.0 && git push origin v0.1.0`. Approve the `production` deployment under **Actions → Deploy production**.
+5. **Check production.** The workflow ends once production reports the new version. Open the production address to confirm, then repeat check 3 in `production`.
 
 ## Local development
 
