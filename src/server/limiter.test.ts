@@ -42,6 +42,14 @@ describe('Limiter', () => {
     expect(l.take('d')).toMatchObject({ ok: false, scope: 'global' });
   });
 
+  it('checks without counting', () => {
+    const l = new Limiter({ perMinute: 1, perDay: 100, globalPerDay: 1000 }, clock().now);
+    expect(l.check('a').ok).toBe(true);
+    expect(l.check('a').ok).toBe(true);
+    expect(l.take('a').ok).toBe(true);
+    expect(l.check('a')).toMatchObject({ ok: false, scope: 'minute' });
+  });
+
   it('does not count refused requests', () => {
     const c = clock();
     const l = new Limiter({ perMinute: 1, perDay: 2, globalPerDay: 1000 }, c.now);

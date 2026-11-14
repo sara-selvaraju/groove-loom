@@ -24,6 +24,7 @@ export interface Composer {
 export type ComposerErrorCode =
   | 'unavailable'
   | 'forbidden'
+  | 'locked'
   | 'rate_limited'
   | 'busy'
   | 'invalid_json'
@@ -48,6 +49,8 @@ export function composerErrorText(code: ComposerErrorCode): string {
       return "The AI isn't switched on here. The knobs, mute, solo and MP3 still work.";
     case 'forbidden':
       return "That invite code didn't work. Enter it again below to use the AI.";
+    case 'locked':
+      return 'Too many wrong invite codes from here. Wait a few minutes, then enter it again below.';
     case 'busy':
       return 'The AI is very busy right now. Your piece is unchanged; try again in a minute.';
     case 'rate_limited':
@@ -66,6 +69,7 @@ export function composerErrorText(code: ComposerErrorCode): string {
 const SERVER_CODES: Record<string, ComposerErrorCode> = {
   unavailable: 'unavailable',
   forbidden: 'forbidden',
+  locked: 'locked',
   rate_limited: 'rate_limited',
   busy: 'busy',
   refused: 'refused',

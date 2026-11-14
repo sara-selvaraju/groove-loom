@@ -55,7 +55,9 @@ function message(overrides: Partial<Message> & { text?: string } = {}): Message 
   } as unknown as Message;
 }
 
-function setup(opts: { reply?: Message | Error; inviteCode?: string | null; noKey?: boolean; limiter?: Limiter; model?: string } = {}) {
+function setup(
+  opts: { reply?: Message | Error; inviteCode?: string | null; noKey?: boolean; limiter?: Limiter; guesses?: Limiter; model?: string } = {},
+) {
   const calls: Params[] = [];
   const logs: Record<string, unknown>[] = [];
   const messages: MessagesApi = {
@@ -71,6 +73,7 @@ function setup(opts: { reply?: Message | Error; inviteCode?: string | null; noKe
       messages: opts.noKey ? null : messages,
       inviteCode: opts.inviteCode === undefined ? 'open-sesame' : opts.inviteCode,
       limiter: opts.limiter,
+      guesses: opts.guesses,
       model: opts.model,
       log: (e) => logs.push(e),
     },
@@ -192,6 +195,31 @@ describe('POST /api/compose: access and limits', () => {
     expect(res.status).toBe(401);
     expect(await res.json()).toEqual({ error: 'forbidden' });
     expect(calls).toHaveLength(0);
+  });
+
+  it('locks out a visitor after too many wrong codes, even when they then send the right one', async () => {
+    const guesses = new Limiter({ perMinute: 3, perDay: 20, globalPerDay: Infinity });
+    const { post, calls, logs } = setup({ guesses });
+    const wrong = { 'x-invite-code': 'guess' };
+    for (let i = 0; i < 3; i++) expect((await post(ask, wrong)).status).toBe(401);
+    for (const headers of [wrong, { 'x-invite-code': 'open-sesame' }]) {
+      const res = await post(ask, headers);
+      expect(res.status).toBe(429);
+      expect(res.headers.get('retry-after')).toMatch(/^\d+$/);
+      expect(await res.json()).toEqual({ error: 'locked' });
+    }
+    expect(calls).toHaveLength(0);
+    expect(logs.at(-1)).toMatchObject({ status: 429, reason: 'invite_guesses' });
+  });
+
+  it('does not count right codes as guesses, and locks out only the visitor guessing', async () => {
+    const guesses = new Limiter({ perMinute: 1, perDay: 20, globalPerDay: Infinity });
+    const { post } = setup({ guesses });
+    const from = (ip: string, code: string) => ({ 'x-invite-code': code, 'x-forwarded-for': ip });
+    for (let i = 0; i < 3; i++) expect((await post(ask, from('198.51.100.1', 'open-sesame'))).status).toBe(200);
+    expect((await post(ask, from('198.51.100.2', 'guess'))).status).toBe(401);
+    expect((await post(ask, from('198.51.100.2', 'open-sesame'))).status).toBe(429);
+    expect((await post(ask, from('198.51.100.1', 'open-sesame'))).status).toBe(200);
   });
 
   it('rate-limits per visitor and says when to retry', async () => {

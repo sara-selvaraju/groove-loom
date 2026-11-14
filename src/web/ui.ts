@@ -424,7 +424,7 @@ async function ask(input: string): Promise<void> {
     if (!(e instanceof ComposerError)) console.error('ask failed', e);
     pending.err = true;
     pending.text = composerErrorText(code);
-    if (code === 'forbidden') {
+    if (code === 'forbidden' || code === 'locked') {
       setInviteCode(null);
       renderAiNote();
     }

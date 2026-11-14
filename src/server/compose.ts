@@ -9,7 +9,7 @@ import { bodyLimit } from 'hono/body-limit';
 import { COMPOSE_SCHEMA } from '../shared/compose-schema.js';
 import { cleanText, droppedLayers, droppedNote, sanitizePiece, type Piece } from '../shared/piece.js';
 import { INSTRUCTIONS, buildRequest, type ChatMessage } from '../shared/prompt.js';
-import { Limiter } from './limiter.js';
+import { INVITE_GUESS_LIMITS, Limiter } from './limiter.js';
 import { parsesAsMini } from './mini.js';
 
 export const DEFAULT_MODEL = 'claude-opus-5-5';
@@ -38,10 +38,12 @@ export interface ComposeOptions {
   inviteCode: string | null;
   model?: string;
   limiter?: Limiter;
+  /** Counts wrong invite codes per visitor, so the code cannot be guessed by trying many. */
+  guesses?: Limiter;
   log?: (entry: Record<string, unknown>) => void;
 }
 
-export type ComposeErrorCode = 'unavailable' | 'forbidden' | 'bad_request' | 'rate_limited' | 'busy' | 'refused' | 'invalid_json' | 'failed';
+export type ComposeErrorCode = 'unavailable' | 'forbidden' | 'locked' | 'bad_request' | 'rate_limited' | 'busy' | 'refused' | 'invalid_json' | 'failed';
 
 const fail = (c: Context, status: 400 | 401 | 422 | 429 | 502 | 503, error: ComposeErrorCode) => c.json({ error }, status);
 
@@ -75,6 +77,7 @@ function readHistory(raw: unknown): ChatMessage[] | null {
 export function mountCompose(app: Hono, options: ComposeOptions): void {
   const model = options.model || DEFAULT_MODEL;
   const limiter = options.limiter ?? new Limiter();
+  const guesses = options.guesses ?? new Limiter(INVITE_GUESS_LIMITS);
   const log = options.log ?? ((entry) => console.log(JSON.stringify(entry)));
   const enabled = !!options.messages && !!options.inviteCode;
 
@@ -93,8 +96,18 @@ export function mountCompose(app: Hono, options: ComposeOptions): void {
       done(503, { reason: 'not_configured' });
       return fail(c, 503, 'unavailable');
     }
+    // A visitor with too many wrong codes is refused before the code is compared,
+    // so further guesses learn nothing, even a right one.
+    const visitor = clientKey(c);
+    const lockout = guesses.check(visitor);
+    if (!lockout.ok) {
+      c.header('Retry-After', String(lockout.retryAfterSeconds));
+      done(429, { reason: 'invite_guesses', scope: lockout.scope });
+      return fail(c, 429, 'locked');
+    }
     const code = c.req.header('x-invite-code') ?? '';
     if (!code || !sameCode(code, options.inviteCode)) {
+      guesses.take(visitor);
       done(401);
       return fail(c, 401, 'forbidden');
     }
@@ -114,7 +127,7 @@ export function mountCompose(app: Hono, options: ComposeOptions): void {
       return fail(c, 400, 'bad_request');
     }
 
-    const limit = limiter.take(clientKey(c));
+    const limit = limiter.take(visitor);
     if (!limit.ok) {
       c.header('Retry-After', String(limit.retryAfterSeconds));
       done(429, { scope: limit.scope });
