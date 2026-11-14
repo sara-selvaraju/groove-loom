@@ -8,9 +8,7 @@ Groove Loom runs as one Railway service: a small Node server (Hono) that serves 
 |---|---|---|
 | Pull request opened or updated | `CI` workflow: lint, typecheck, unit tests, build, browser smoke test | Pass or fail shown on the pull request. Railway also builds a PR environment for previews. |
 | Merge to `main` | `CI` workflow on the merge commit | Railway deploys to **staging** only after every workflow on that commit passes (Wait for CI). A failed run leaves the previous version running. |
-| Pull request that changes `.railway/` | `Railway config` workflow, `plan (staging)` job | The settings change Railway would make to staging, shown in the run's summary. |
-| Merge to `main` that changes `.railway/` | `Railway config` workflow, `apply (staging)` job | Staging's settings updated before Railway deploys the commit (Wait for CI holds the deploy until this workflow passes too). |
-| Push of a `v*` tag | `Deploy production` workflow | Checks the tag, reruns `CI`, waits for approval, applies `.railway/railway.ts` to production, deploys with `railway up`, then waits until `/healthz` reports the new version. |
+| Push of a `v*` tag | `Deploy production` workflow | Checks the tag, reruns `CI`, waits for approval, deploys to **production** with `railway up`, then waits until `/healthz` reports the new version. |
 
 A deploy whose health check fails never replaces the running version.
 
@@ -25,21 +23,25 @@ The service's Railway settings live in [`.railway/railway.ts`](../.railway/railw
 | Restart policy | on failure, up to 3 times | same |
 | Source | GitHub `main`, with Wait for CI | none: deploys only come from the release workflow |
 
-The file is not read at deploy time. It is applied with `railway config apply`: by the `Railway config` workflow for staging, and by the release workflow for production. A setting changed in the dashboard that the file also sets is put back on the next apply, so change the file instead.
+The file is not read at deploy time. It is applied by hand with `railway config apply`, by someone signed in to the Railway CLI, whenever the file changes. A setting changed in the dashboard that the file also sets is put back on the next apply, so change the file instead.
+
+Applying from CI is not set up: `railway config plan` and `apply` were refused with a project token (CLI 5.74.0) even though other commands accepted the same token. Revisit once Railway fixes this; a staging-scoped project token as a repository secret and a workflow that plans on pull requests and applies on merge would be enough.
 
 Not in the file, and set in the dashboard: public domains, variables (such as `ANTHROPIC_API_KEY`), PR environments, and production's lack of a source. The file leaves production's source unmanaged rather than asserting there is none, so reconnecting a branch in the production dashboard would not be undone by an apply.
 
 Railway's older `railway.json` format (Config as Code) is deprecated: services created after the deprecation ignore it, and existing files stop working on 1 December 2026.
 
-To preview a change locally, with the Railway CLI signed in to the account that owns the project:
+To change a setting, edit the file in a pull request, then after merging apply it with the Railway CLI signed in to the account that owns the project:
 
 ```sh
-railway link            # once: pick the project, an environment and the service
-railway config plan --environment staging
+railway link                                  # once: pick the project, an environment and the service
+railway config plan --environment staging     # preview
+railway config apply --environment staging    # apply; check staging
 railway config plan --environment production
+railway config apply --environment production
 ```
 
-The workflows apply without `--confirm-destructive`, so a change that would delete a resource fails in CI and has to be applied by hand after review.
+Read the plan before applying. Anything marked for deletion needs a second look; the CLI asks for `--confirm-destructive` before it will delete.
 
 ## Releasing
 
@@ -123,17 +125,15 @@ PR environments copy the base environment's variables. With `staging` as the bas
 
 **Check:** the next push to an open pull request creates a temporary environment for it in the environment menu, and Railway deletes it when the pull request closes.
 
-#### 5. Create the deploy tokens
-
-Two project tokens, one per environment. Each can change only its own environment.
+#### 5. Create the production deploy token
 
 1. In **Project Settings**, go to **Tokens**.
-2. Create a token named `github-actions-production`, with the environment set to `production`. Copy it straight away; Railway shows it once.
-3. Create a token named `github-actions-staging`, with the environment set to `staging`. Copy it too.
+2. Create a token named `github-actions-production`, with the environment set to `production`.
+3. Copy the token straight away; Railway shows it once.
 
-The production token goes into GitHub as an environment secret, so a workflow can only read it after a release has been approved. The staging token is a repository secret, used to plan and apply `.railway/railway.ts` for staging.
+This token can deploy to `production` and nothing else. It goes into GitHub as an environment secret, so a workflow can only read it after a release has been approved.
 
-**Note down:** both tokens, somewhere temporary (they are pasted into GitHub next and should not be kept anywhere else).
+**Note down:** the token, somewhere temporary (it is pasted into GitHub next and should not be kept anywhere else).
 
 #### 6. Variables
 
@@ -146,7 +146,6 @@ None are needed yet: Railway sets `PORT` itself. `ANTHROPIC_API_KEY` arrives wit
 | Service name, for example `groove-loom` | Railway step 1 | `RAILWAY_SERVICE` variable |
 | Production address | Railway step 3 | `PRODUCTION_URL` variable, written as `https://<address>` with no trailing slash |
 | Production token | Railway step 5 | `RAILWAY_TOKEN` secret in the `production` environment |
-| Staging token | Railway step 5 | `RAILWAY_STAGING_TOKEN` repository secret |
 | Staging address | Railway step 2 | Not needed by GitHub; used to check staging after merging |
 
 ### GitHub
@@ -159,15 +158,10 @@ None are needed yet: Railway sets `PORT` itself. `ANTHROPIC_API_KEY` arrives wit
 
 2. Tick **Required reviewers** and add the project owner. Leave **Prevent self-review** off, so the owner can approve their own releases. Save the protection rules.
 3. Under **Deployment branches and tags**, choose **Selected branches and tags**, then **Add deployment branch or tag rule**, pick **Tag**, and enter `v*`.
-4. Under **Environment secrets**, add `RAILWAY_TOKEN` with the production token from Railway step 5. Then delete the temporary copy.
+4. Under **Environment secrets**, add `RAILWAY_TOKEN` with the token from Railway step 5. Then delete the temporary copy.
 5. Under **Environment variables**, add `RAILWAY_SERVICE` (the service name) and `PRODUCTION_URL` (for example `https://groove-loom-production.up.railway.app`).
 
-#### 2. Add the staging token
-
-1. Open **Settings → Secrets and variables → Actions**.
-2. Under **Repository secrets**, choose **New repository secret**, name it `RAILWAY_STAGING_TOKEN`, and paste the staging token from Railway step 5. Then delete the temporary copy.
-
-#### 3. Protect `main`
+#### 2. Protect `main`
 
 1. Open **Settings → Rules → Rulesets → New ruleset → New branch ruleset**.
 2. Name it `main`, set **Enforcement status** to Active, and under **Target branches** add the default branch.
@@ -176,7 +170,7 @@ None are needed yet: Railway sets `PORT` itself. `ANTHROPIC_API_KEY` arrives wit
 5. Tick **Block force pushes**.
 6. Releases push a version bump straight to `main` (see Releasing). To allow that, use the **Bypass list** section near the top of the same page (above **Target branches**): choose **Add bypass**, tick **Repository admin**, choose **Add selected**, then set its mode to **Always allow**. "For pull requests only" would still block the direct push. Without a bypass, make version bumps through pull requests.
 
-#### 4. Optional: protect release tags
+#### 3. Optional: protect release tags
 
 A tag ruleset targeting `v*` that restricts creation to admins stops anyone else starting a production release.
 
@@ -184,7 +178,7 @@ A tag ruleset targeting `v*` that restricts creation to admins stops anyone else
 
 1. **Merge the pipeline pull request.** CI runs on the merge commit, then Railway deploys staging. Watch it under the service's **Deployments** in `staging`.
 2. **Check staging.** Open the staging address. The page should say "Server is up: version 0.1.0" followed by a short build code. If **Wait for CI** was missing in Railway step 2, turn it on now.
-3. **Check the Railway settings were applied.** After a merge that changes `.railway/`, the `Railway config` workflow's `apply (staging)` job should pass. The next staging deploy's **Details** should then show the build and start commands, the `/healthz` health check and a restart limit of 3, and its logs should show the health check running. `railway config plan --environment staging` should report no changes.
+3. **Apply the Railway settings.** Apply `.railway/railway.ts` to both environments by hand (see Railway settings in code). `railway config plan` should then report no changes, and the next deploy's **Details** should show the build and start commands, the `/healthz` health check and a restart limit of 3.
 4. **Release.** On an up-to-date `main`, run `npm version patch && git push --follow-tags`, or tag the current version with `git tag v0.1.0 && git push origin v0.1.0`. Approve the `production` deployment under **Actions → Deploy production**.
 5. **Check production.** The workflow ends once production reports the new version. Open the production address to confirm, then check the production deploy's **Details** the same way.
 

@@ -1,9 +1,8 @@
 // Railway infrastructure as code for Groove Loom.
 //
-// This file replaces railway.json. It is not read at deploy time: CI applies
-// it with `railway config apply` (staging on merge to main, production in the
-// release workflow), and `railway config plan` previews a change on a pull
-// request. See docs/deployment.md.
+// This file replaces railway.json. It is not read at deploy time: after a
+// change is merged, it is applied by hand with `railway config plan` and
+// `railway config apply`. See docs/deployment.md.
 //
 // One file covers both environments. `ctx.environment` is the environment the
 // CLI is applying to.
