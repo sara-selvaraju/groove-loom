@@ -18,7 +18,7 @@ describe('buildPrompt', () => {
   it('asks for data, never code', () => {
     const prompt = buildPrompt('add a trumpet', piece, []);
     expect(prompt).toContain('You never write code.');
-    expect(prompt).toContain('{"reply": string, "piece": Piece}');
+    expect(prompt).toContain('{"reply": string, "words": Word[], "piece": Piece}');
   });
 
   it('includes the current piece without solo flags', () => {

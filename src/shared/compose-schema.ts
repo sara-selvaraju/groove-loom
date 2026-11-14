@@ -48,10 +48,22 @@ const layer = {
   additionalProperties: false,
 } as const;
 
+const word = {
+  type: 'object',
+  properties: {
+    said: { type: 'string' },
+    term: { type: 'string' },
+    meaning: { type: 'string' },
+  },
+  required: ['said', 'term', 'meaning'],
+  additionalProperties: false,
+} as const;
+
 export const COMPOSE_SCHEMA = {
   type: 'object',
   properties: {
     reply: { type: 'string' },
+    words: { type: 'array', items: word, description: 'At most 3 entries.' },
     piece: {
       type: 'object',
       properties: {
@@ -65,6 +77,6 @@ export const COMPOSE_SCHEMA = {
       additionalProperties: false,
     },
   },
-  required: ['reply', 'piece'],
+  required: ['reply', 'words', 'piece'],
   additionalProperties: false,
 } as const;

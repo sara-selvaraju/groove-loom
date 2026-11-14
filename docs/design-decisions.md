@@ -21,6 +21,15 @@ Instead the AI returns a structured description of the piece, which the app vali
 - Global controls: tempo, key, scale, swing. Per-layer controls: volume, tone, space (reverb), mute, solo. Rhythm layers built from even spacing also get hits, steps and rotate, which is a Euclidean rhythm in disguise.
 - Vague requests get a confident choice, explained in one line ("put it in D minor, it suits the moody feel you asked for"). That explanation is where the teaching happens.
 
+## Every reply teaches: words and what changed
+
+The app exists to show how everyday words map to music, so each reply carries two things under its explanation.
+
+- **Words.** The AI links up to three words the person used to the music idea behind them, with a one-sentence meaning: "groovier" → swing: every second note lands a little late, so the beat bounces. Over a session this builds a personal glossary from the person's own language, which sticks better than a list of terms. The entries are part of the structured reply (`words` in the schema), checked by `sanitizeWords` like any other field, and shown as text only. An empty list is fine: "make the bass louder" has nothing to teach.
+- **What changed.** The app compares the piece before and after (`describeChanges` in `src/shared/learning.ts`) and lists the differences in plain words: tempo, key, scale, feel, layers added or removed, and per-layer changes such as "louder, more echo". The app works this out rather than the AI, so the list is always accurate even when the reply is vague or wrong, and the reply no longer needs to recite changes and can explain the idea instead.
+
+The pattern line under each layer has hover help explaining scale-degree notes, `x` and `~`, and accents. Both lists stay in the chat and are kept with the draft, but are never sent back to the AI as context. The words cost a few dozen output tokens a request.
+
 ## Visualisation
 
 The visual went through four versions:

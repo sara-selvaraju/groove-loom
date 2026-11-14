@@ -2,6 +2,7 @@
 // unvalidated: the caller runs it through sanitizePiece before use.
 // ServerComposer posts to /api/compose, where the server holds the key;
 // phase 2 adds browser-side adapters for a person's own key.
+import type { Word } from '../shared/learning.js';
 import type { Piece } from '../shared/piece.js';
 import type { ChatMessage } from '../shared/prompt.js';
 
@@ -13,6 +14,8 @@ export interface ComposeRequest {
 
 export interface ComposeResult {
   reply: string;
+  /** Checked by the server; check again before use. */
+  words?: Word[];
   /** Unvalidated. */
   piece: unknown;
 }
@@ -97,10 +100,10 @@ export class ServerComposer implements Composer {
       if (signal?.aborted) throw new ComposerError('cancelled');
       throw new ComposerError('failed', e instanceof Error ? e.message : undefined);
     }
-    const body = (await res.json().catch(() => null)) as { error?: string; reply?: unknown; piece?: unknown } | null;
+    const body = (await res.json().catch(() => null)) as { error?: string; reply?: unknown; words?: Word[]; piece?: unknown } | null;
     if (!res.ok) throw new ComposerError(SERVER_CODES[body?.error ?? ''] ?? 'failed');
     if (!body || typeof body.reply !== 'string') throw new ComposerError('invalid_json');
-    return { reply: body.reply, piece: body.piece };
+    return { reply: body.reply, words: body.words, piece: body.piece };
   }
 }
 

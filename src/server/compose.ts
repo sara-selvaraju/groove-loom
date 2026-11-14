@@ -8,6 +8,7 @@ import type { Context, Hono } from 'hono';
 import { bodyLimit } from 'hono/body-limit';
 import { COMPOSE_SCHEMA } from '../shared/compose-schema.js';
 import { cleanText, droppedLayers, droppedNote, sanitizePiece, type Piece } from '../shared/piece.js';
+import { sanitizeWords } from '../shared/learning.js';
 import { INSTRUCTIONS, buildRequest, type ChatMessage } from '../shared/prompt.js';
 import { INVITE_GUESS_LIMITS, Limiter } from './limiter.js';
 import { parsesAsMini } from './mini.js';
@@ -186,7 +187,7 @@ export function mountCompose(app: Hono, options: ComposeOptions): void {
       return fail(c, 502, 'invalid_json');
     }
     const text = message.content.find((b): b is Anthropic.Beta.Messages.BetaTextBlock => b.type === 'text')?.text;
-    let parsed: { reply?: unknown; piece?: unknown };
+    let parsed: { reply?: unknown; words?: unknown; piece?: unknown };
     try {
       parsed = JSON.parse(text ?? '');
     } catch {
@@ -203,6 +204,6 @@ export function mountCompose(app: Hono, options: ComposeOptions): void {
     const note = droppedNote(dropped);
     done(200, { ...usage, overLimit: dropped.overLimit.length, unknownInstrument: dropped.unknownInstrument.length });
     const reply = cleanText(parsed.reply, 500) || 'Done.';
-    return c.json({ reply: note ? `${reply}\n\n${note}` : reply, piece: next });
+    return c.json({ reply: note ? `${reply}\n\n${note}` : reply, words: sanitizeWords(parsed.words), piece: next });
   });
 }

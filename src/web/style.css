@@ -305,6 +305,51 @@ img {
   color: var(--muted);
   margin-bottom: 2px;
 }
+/* Under a reply: the person's words and the music ideas behind them, a small glossary. */
+.msg .words {
+  margin: 10px 0 0;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--accent) 7%, var(--surface));
+  display: grid;
+  gap: 2px 0;
+}
+.msg .words dt {
+  font-weight: 600;
+}
+.msg .words dt:not(:first-child) {
+  margin-top: 6px;
+}
+.msg .words .said {
+  color: var(--muted);
+  font-weight: 500;
+}
+.msg .words .arrow {
+  color: var(--muted);
+}
+.msg .words .term {
+  color: var(--accent);
+}
+.msg .words dd {
+  margin: 0;
+  font-size: 13px;
+}
+/* Then what the app saw change, worked out from the piece itself. */
+.msg .changes {
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.msg .changes-title {
+  display: block;
+  font-size: 12px;
+  font-weight: 650;
+}
+.msg .changes ul {
+  margin: 2px 0 0;
+  padding-left: 18px;
+  white-space: normal;
+}
 .ask-row {
   display: flex;
   gap: 8px;
