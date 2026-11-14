@@ -120,6 +120,9 @@ None are needed yet: Railway sets `PORT` itself. `ANTHROPIC_API_KEY` arrives wit
 #### 1. Create the production environment
 
 1. In the repository, open **Settings → Environments → New environment** and name it `production` (it must match the name in the workflow).
+
+   Entries such as `sweet-charisma / staging` may already be listed. Railway's GitHub app creates these to record its own deploys, named after the Railway project. They are not used by the workflow: leave them alone and create a separate environment named exactly `production`. Renaming the Railway project (**Project Settings → General**) makes its entries easier to tell apart.
+
 2. Tick **Required reviewers** and add the project owner. Leave **Prevent self-review** off, so the owner can approve their own releases. Save the protection rules.
 3. Under **Deployment branches and tags**, choose **Selected branches and tags**, then **Add deployment branch or tag rule**, pick **Tag**, and enter `v*`.
 4. Under **Environment secrets**, add `RAILWAY_TOKEN` with the token from Railway step 5. Then delete the temporary copy.
