@@ -3,7 +3,7 @@
 import { codeFor, audible, patternText } from '../shared/compiler.js';
 import { BLANK, STARTER, cleanText, sanitizePiece, type Layer } from '../shared/piece.js';
 import { INSTR, KEYS, MAX_LAYERS, SCALES } from '../shared/vocabulary.js';
-import { checkAudio, mediaSession, preload, unlockAudio, withSounds } from './audio.js';
+import { checkAudio, mediaSession, preload, setVolume, unlockAudio, withSounds } from './audio.js';
 import { drawCloth, initCloth } from './cloth.js';
 import { ComposerError, ServerComposer, aiAvailable, composerErrorText, type Composer } from './composer.js';
 import { record, saveCloth } from './export.js';
@@ -286,6 +286,16 @@ let ctl: AbortController | null = null;
 let composer: Composer | null = null;
 
 const INVITE_KEY = 'gl.invite';
+const VOLUME_KEY = 'gl.volume';
+/** Listening volume is a setting of this device, not part of the piece: not undone, not shared. */
+function loadVolume(): number {
+  try {
+    const v = Number(localStorage.getItem(VOLUME_KEY) ?? '0.8');
+    return Number.isFinite(v) ? Math.min(1, Math.max(0, v)) : 0.8;
+  } catch {
+    return 0.8;
+  }
+}
 function inviteCode(): string | null {
   try {
     return localStorage.getItem(INVITE_KEY);
@@ -447,14 +457,44 @@ function wire(): void {
     state.piece = JSON.parse(prev);
     update();
   };
+  // Start over: a blank piece, an empty cloth and a fresh conversation. Undo still brings the last piece back.
   $('reset').onclick = () => {
+    ctl?.abort();
     snapshot();
+    if (state.playing) void setPlaying(false);
     state.piece = clone(BLANK);
     state.rows.length = 0;
-    state.log.push({ who: 'loom', text: 'Blank slate. Describe a beat or a feel to begin. Undo brings the last piece back.' });
+    state.curRow = null;
+    state.log = [{ who: 'loom', text: 'Blank slate. Describe a beat or a feel to begin. Undo brings the last piece back.' }];
     renderLog();
     update();
   };
+  // Clear chat: forget the conversation (the AI sees it as context), keep the piece.
+  $('clearChat').onclick = () => {
+    ctl?.abort();
+    state.log = [];
+    renderLog();
+    save();
+  };
+
+  const volume = $<HTMLInputElement>('volume');
+  const showVolume = (v: number) => {
+    volume.value = String(v);
+    $('volumeOut').textContent = v === 0 ? 'off' : `${Math.round(v * 100)}%`;
+  };
+  const savedVolume = loadVolume();
+  showVolume(savedVolume);
+  setVolume(savedVolume);
+  volume.addEventListener('input', () => {
+    const v = Number(volume.value);
+    showVolume(v);
+    setVolume(v);
+    try {
+      localStorage.setItem(VOLUME_KEY, String(v));
+    } catch {
+      // not remembered
+    }
+  });
 
   $('inviteForm').addEventListener('submit', (e) => {
     e.preventDefault();

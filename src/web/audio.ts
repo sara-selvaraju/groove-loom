@@ -18,15 +18,29 @@ redirectWorklets();
 export const ready: Promise<S.Repl> = S.initStrudel({ prebake: () => registerSamples() });
 
 // A limiter on the master output keeps a busy mix from distorting. Recording taps the limiter's output.
+// The volume control sits after the limiter, so it changes what you hear but not the MP3.
 export let master: AudioNode | null = null;
+let volumeNode: GainNode | null = null;
+let volume = 0.8;
+
+/** Listening volume, 0..1. Applies now if the audio engine is running, otherwise once it starts. */
+export function setVolume(v: number): void {
+  volume = Math.min(1, Math.max(0, v));
+  if (volumeNode) volumeNode.gain.setTargetAtTime(volumeGain(volume), volumeNode.context.currentTime, 0.02);
+}
+// The slider is linear, hearing is not: squaring makes the lower half of the slider useful.
+const volumeGain = (v: number) => v * v;
+
 ready.then(() => {
+  const ctx = S.getAudioContext(),
+    out = S.getSuperdoughAudioController().output;
   try {
-    const ctx = S.getAudioContext(),
-      out = S.getSuperdoughAudioController().output;
+    volumeNode = new GainNode(ctx, { gain: volumeGain(volume) });
+    volumeNode.connect(ctx.destination);
     const lim = new DynamicsCompressorNode(ctx, { threshold: -8, knee: 4, ratio: 12, attack: 0.003, release: 0.2 });
     out.destinationGain.disconnect();
     out.destinationGain.connect(lim);
-    lim.connect(ctx.destination);
+    lim.connect(volumeNode);
     master = lim;
   } catch (e) {
     console.warn('limiter not added', e);
