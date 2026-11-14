@@ -6,7 +6,18 @@ It is built for people who are not musicians, as a way to explore the language, 
 
 ## Status
 
-`prototype/` holds the working prototype: a single HTML page first built and published as a claude.ai artifact. The next step is turning it into a proper web app. See [CLAUDE.md](CLAUDE.md) for the brief and the first tasks, and [docs/design-decisions.md](docs/design-decisions.md) for why things are the way they are.
+`prototype/` holds the working prototype: a single HTML page first built and published as a claude.ai artifact. It is being ported into a proper web app under `src/`; so far the app is a skeleton that proves the build and deploy pipeline. See [CLAUDE.md](CLAUDE.md) for the brief and the first tasks, and [docs/design-decisions.md](docs/design-decisions.md) for why things are the way they are.
+
+## Develop the app
+
+Needs Node 22.
+
+```sh
+npm install
+npm run dev
+```
+
+This starts the front end on http://localhost:5173 with the server behind it. Checks, releases and hosting are covered in [docs/deployment.md](docs/deployment.md).
 
 ## Run the prototype
 

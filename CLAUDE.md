@@ -10,7 +10,9 @@ The repo is meant to be forked. Licence is AGPL-3.0 to match Strudel.
 
 ## Current state
 
-`prototype/index.html` is a working single-file prototype (about 1,240 lines), originally a claude.ai artifact. It is the reference implementation: behaviour, look and copy are all agreed. Do not treat it as throwaway; port it.
+**App skeleton (task 1).** A Vite + TypeScript front end in `src/web`, a Hono server in `src/server` (serves `dist/web` and `/healthz`, sets a strict Content Security Policy), CI in `.github/workflows/ci.yml`, production deploys from tags in `.github/workflows/deploy-production.yml`, and Railway settings in `railway.json`. Code shared by front end and server (for example `sanitizePiece`) goes in `src/shared`; the server is bundled with esbuild so it can import it. TypeScript stays on 6.0.x until typescript-eslint supports 7. How the pipeline works, how to release and the one-off dashboard setup are in [docs/deployment.md](docs/deployment.md). The front end is still a placeholder page.
+
+**Prototype.** `prototype/index.html` is a working single-file prototype (about 1,240 lines), originally a claude.ai artifact. It is the reference implementation: behaviour, look and copy are all agreed. Do not treat it as throwaway; port it.
 
 Sections in `prototype/index.html`, in order:
 
