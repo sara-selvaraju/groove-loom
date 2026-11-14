@@ -16,5 +16,7 @@
     "resolveJsonModule": true,
     "noEmit": true
   },
-  "include": ["src/web", "src/shared"]
+  "include": ["src/web", "src/shared"],
+  // Tests run in Node; tsconfig.server.json checks them.
+  "exclude": ["src/**/*.test.ts", "src/shared/test-support.ts"]
 }
