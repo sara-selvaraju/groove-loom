@@ -72,7 +72,14 @@ The first redesign after the port, made because the page needed more life and th
 - **Sentence case, no all-caps labels.** Recursive stays, with its casual axis used in headings.
 - **Loom vibrancy.** Between hits a layer's band is a softer tint, so each hit stands out in full colour; silent layers and preview bars are less washed out; brighter, warmer light on the yarn and the wood.
 
-A second pass makes the loom itself more realistic: the frame, the warp under tension, a reed and a shuttle.
+The second pass made the loom itself more realistic (`src/web/loom-frame.ts`):
+
+- A wooden frame: side rails running the length of the loom and a front beam, with wood grain drawn once on a canvas and tinted by the theme. The camera pulls back slightly so the rails are in view.
+- The space in front of the cloth is laid out as on a real loom: the weaving edge, then the shuttle's path, then the reed. Bare warp shows between them.
+- A reed with a wooden top and bottom bar and 96 steel teeth, which swings in to pack each new bar.
+- A boat-shaped shuttle carrying a bobbin of yarn in the first layer's colour, crossing as each bar is woven.
+- In the cloth: darker selvedges, and a soft shadow just behind the weaving edge.
+- A soft fill light from the weaver's side, so the faces of the reed, shuttle and beam are not in shade. Steel is kept mostly non-metallic because, with nothing to reflect, true metal renders black.
 
 ## Open questions
 

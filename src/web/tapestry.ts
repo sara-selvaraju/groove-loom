@@ -3,26 +3,23 @@
 // of a data texture, and a shader draws the yarns. The flat cloth is the
 // fallback when WebGL2 or the shader is unavailable.
 import {
-  BoxGeometry,
   Color,
   ColorManagement,
-  CylinderGeometry,
   DataTexture,
   DirectionalLight,
   HemisphereLight,
   LinearSRGBColorSpace,
   Mesh,
-  MeshStandardMaterial,
   NearestFilter,
   PerspectiveCamera,
   PlaneGeometry,
   RGBAFormat,
   Scene,
   ShaderMaterial,
-  SphereGeometry,
   Vector3,
   WebGLRenderer,
 } from 'three';
+import { createLoomFrame } from './loom-frame.js';
 import { state } from './state.js';
 import { TAP_FS, TAP_VS } from './tapestry-shaders.js';
 import { COLS, makeRow, mix, pickList, rnd, seedRow, tokens, type Pick, type Row } from './weave.js';
@@ -84,17 +81,17 @@ export function createTapestry(host: HTMLCanvasElement, tagBox: HTMLElement, onF
   );
   bed.rotation.x = -Math.PI / 2;
   bed.position.z = -28;
-  const wood = new MeshStandardMaterial({ roughness: 0.8, metalness: 0 });
-  const beater = new Mesh(new BoxGeometry(HALF * 2 + 1.1, 0.2, 0.22), wood);
-  const shuttle = new Mesh(new SphereGeometry(1, 32, 16), wood);
-  shuttle.scale.set(0.6, 0.1, 0.16);
-  const beam = new Mesh(new CylinderGeometry(0.32, 0.32, HALF * 2 + 1.1, 32), wood);
-  beam.rotation.z = Math.PI / 2;
+  const frame = createLoomFrame(HALF);
+  const { reed, shuttle, beam } = frame;
   // Light intensities are scaled by pi: three.js now uses physical light units, r128 did not.
-  scene.add(bed, beater, shuttle, beam, new HemisphereLight(0xffffff, 0x3a3a3a, 0.6 * Math.PI));
+  scene.add(bed, frame.group, new HemisphereLight(0xffffff, 0x3a3a3a, 0.6 * Math.PI));
   const sun = new DirectionalLight(0xfff4e6, 0.7 * Math.PI);
   sun.position.set(-4, 8, -6);
-  scene.add(sun);
+  // A soft fill from the weaver's side, so the faces of the reed, shuttle and beam aren't in shade.
+  // (The cloth's shader does its own lighting and ignores these.)
+  const fill = new DirectionalLight(0xffffff, 0.45 * Math.PI);
+  fill.position.set(2, 6, 10);
+  scene.add(sun, fill);
 
   let zTop = -10,
     zBot = 2,
@@ -126,13 +123,13 @@ export function createTapestry(host: HTMLCanvasElement, tagBox: HTMLElement, onF
     const el = (62 * Math.PI) / 180,
       target = new Vector3(0, 0, -1.6);
     const hf = 2 * Math.atan(Math.tan((camera.fov * Math.PI) / 360) * camera.aspect);
-    const D = (HALF + 0.45) / Math.tan(hf / 2);
+    const D = (HALF + 0.95) / Math.tan(hf / 2); // wide enough to show the side rails
     camera.position.set(0, D * Math.sin(el), target.z + D * Math.cos(el));
     camera.lookAt(target);
     camera.updateProjectionMatrix();
     zTop = rayZ(0.86);
     zBot = rayZ(-1);
-    fellNear = zBot - 0.8;
+    fellNear = zBot - 1.65; // room in front of the cloth for the shuttle's path and the reed
     beam.position.set(0, 0.05, zBot - 0.2);
     return true;
   }
@@ -145,7 +142,8 @@ export function createTapestry(host: HTMLCanvasElement, tagBox: HTMLElement, onF
     U.uWarp.value.set(T.warp);
     U.uWarp2.value.set(T.warp2);
     scene.background = new Color(T.gap);
-    wood.color.set(mix(T.shuttle, '#000000', 0.12));
+    frame.setWood(mix(T.shuttle, '#000000', 0.08));
+    frame.setYarn(T.layers[0] || T.ink);
   }
   // write one pick (a row of crossings) into the texture
   function writePick(p: number, row: Row, pk: Pick, i: number, upto: number, ghost: boolean | undefined, k2: number): void {
@@ -297,10 +295,12 @@ export function createTapestry(host: HTMLCanvasElement, tagBox: HTMLElement, onF
     U.uFell.value = fz;
     U.uScroll.value = scroll;
     U.uCam.value.copy(camera.position);
-    const beat = Math.exp(-(now - beatAt) / 120); // the beater swings in to pack each new bar
-    beater.position.set(0, 0.11, fz + 0.32 - 0.24 * beat);
-    if (playing) shuttle.position.set(-HALF + ph * HALF * 2, 0.07, fz + 0.1);
-    else shuttle.position.set(-HALF - 0.5, 0.07, fz + 0.1);
+    const beat = Math.exp(-(now - beatAt) / 120); // the reed swings in to pack each new bar
+    // From the cloth outwards, as on a real loom: the weaving edge, the shuttle's path, the reed.
+    reed.position.set(0, 0, fz + 0.8 - 0.62 * beat);
+    // The shuttle crosses while the bar is woven; at rest it waits by the left rail.
+    if (playing) shuttle.position.set(-HALF + ph * HALF * 2, 0.1, fz + 0.36);
+    else shuttle.position.set(-HALF - 0.05, 0.1, fz + 0.36);
     renderer.render(scene, camera);
     if (!checked) {
       // a graphics chip that rejects the shader gets the flat cloth
