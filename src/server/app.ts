@@ -2,12 +2,15 @@ import { Hono } from 'hono';
 import { secureHeaders } from 'hono/secure-headers';
 import { serveStatic } from '@hono/node-server/serve-static';
 import pkg from '../../package.json' with { type: 'json' };
+import { mountCompose, type ComposeOptions } from './compose.js';
 
 export interface AppOptions {
   /** Folder holding the built front end. Relative paths resolve from the working directory. */
   staticRoot?: string;
   /** Commit the running build came from, when the host provides it. */
   commit?: string;
+  /** The AI endpoint. Without it, /api/compose reports the AI as unavailable. */
+  compose?: ComposeOptions;
 }
 
 export interface Health {
@@ -49,6 +52,8 @@ export function createApp(options: AppOptions = {}) {
     c.header('Cache-Control', 'no-store');
     return c.json(health);
   });
+
+  mountCompose(app, options.compose ?? { messages: null, inviteCode: null });
 
   // Vite fingerprints everything under /assets, so it can be cached forever.
   app.use('/assets/*', async (c, next) => {

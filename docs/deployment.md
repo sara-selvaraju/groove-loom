@@ -137,7 +137,17 @@ This token can deploy to `production` and nothing else. It goes into GitHub as a
 
 #### 6. Variables
 
-None are needed yet: Railway sets `PORT` itself. `ANTHROPIC_API_KEY` arrives with the composer, as a separate key per environment (`staging` and `production`), each with a spend limit in the Anthropic Console.
+Railway sets `PORT` itself. The AI needs two variables in each environment; without both it is off and the rest of the app works:
+
+| Variable | Value |
+|---|---|
+| `ANTHROPIC_API_KEY` | A key for that environment only (one for `staging`, another for `production`), created in the Anthropic Console with a monthly spend limit set on it. |
+| `INVITE_CODE` | The shared code testers type to unlock the AI. Use a different code per environment, and change it to cut off access. |
+| `ANTHROPIC_MODEL` | Optional. Defaults to `claude-opus-5-5`. Changing it switches the model without a code change. |
+
+To set them: switch the environment menu to the environment, open the service, go to **Variables**, add each one, then choose **Deploy** in the bar at the top so the change applies. PR environments copy `staging`'s variables, so previews use the staging key and its spend limit.
+
+The server limits each visitor to 10 AI requests a minute and 100 a day, and each environment to 1,000 a day (`src/server/limiter.ts`); counts reset when the service restarts, so the spend limit on the key is the hard cap. Logs record status, timing and token usage for each request, never what people typed.
 
 ### Values for GitHub
 
@@ -186,6 +196,7 @@ A tag ruleset targeting `v*` that restricts creation to admins stops anyone else
 
 ```sh
 npm install
+cp .env.example .env # optional: add a key and an invite code to use the AI locally
 npm run dev          # Vite on http://localhost:5173, server on 8787 behind it
 npm run build && npm start   # production build on http://localhost:8787
 ```

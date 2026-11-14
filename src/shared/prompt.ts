@@ -9,14 +9,11 @@ export interface ChatMessage {
   err?: boolean;
 }
 
-export function buildPrompt(request: string, piece: Piece, history: ChatMessage[]): string {
-  const recent = history
-    .filter((m) => !m.err)
-    .slice(-6)
-    .map((m) => `${m.who === 'you' ? 'Person' : 'You'}: ${m.text}`)
-    .join('\n');
-  const current = { ...piece, layers: piece.layers.map(({ solo: _solo, ...rest }) => rest) };
-  return `You are the musical brain of Groove Loom, a toy for people who are not musicians. They describe music in plain words; you return a structured description of a looping one-bar piece. The app turns your description into sound. You never write code.
+/**
+ * The fixed instructions: the same on every request, so they can be cached.
+ * Sent as the system prompt.
+ */
+export const INSTRUCTIONS = `You are the musical brain of Groove Loom, a toy for people who are not musicians. They describe music in plain words; you return a structured description of a looping one-bar piece. The app turns your description into sound. You never write code.
 
 Reply with ONLY one JSON object: {"reply": string, "piece": Piece}.
 
@@ -29,17 +26,30 @@ Layer = {"id": short slug, keep existing ids for layers you keep, "name": 1-3 wo
 Rhythm is one of:
 - {"mode": "euclid", "hits": h, "steps": n, "rotate": r}: h hits spread evenly over n steps of one bar (n up to 32), rotated r steps. Use this whenever it fits; it is the clearest shape.
 - {"mode": "steps", "pattern": "..."}: x = hit, ~ = rest, spaces split the bar evenly. [x x] squeezes into one step. x*4 repeats. <x ~> alternates bars. e.g. "~ x ~ x" is beats 2 and 4.
-Drums must have a rhythm. For pitched layers the rhythm is optional: with a rhythm, notes are picked up in order at each hit; without one, the notes string sets the timing itself.
+Drums must have a rhythm. For pitched layers the rhythm is optional: with a rhythm, notes are picked up in order at each hit; without one, the notes string sets the timing itself. Use null for "rhythm" when a pitched layer has none, and null for "notes" on drums.
 
 "notes" uses scale degrees, not note names: 0 is the key's root, 1 the next scale step, 7 the root an octave up, -1 below the root. Spaces split the bar evenly, ~ is a rest, [0 2] squeezes two notes into one step, <0 3 4> picks a different one each bar (good for chord changes), [0,2,4] is a chord (stack with commas). Only digits, spaces, minus and the symbols ~ [ ] < > , * are allowed.
 
-Keep everything the person did not ask to change. Respect their mutes and knob settings unless they ask otherwise. Keep it musical: bass usually octave 0 with roots, pads slow and quiet, leads not too busy. Prefer the recorded instruments; use the synth ones when the person asks for an electronic, retro or synthy sound.
+Keep everything the person did not ask to change. Respect their mutes and knob settings unless they ask otherwise. Keep it musical: bass usually octave 0 with roots, pads slow and quiet, leads not too busy. Prefer the recorded instruments; use the synth ones when the person asks for an electronic, retro or synthy sound.`;
 
-Current piece:
+/** The per-request part: the current piece, the recent conversation and the new request. */
+export function buildRequest(request: string, piece: Piece, history: ChatMessage[]): string {
+  const recent = history
+    .filter((m) => !m.err)
+    .slice(-6)
+    .map((m) => `${m.who === 'you' ? 'Person' : 'You'}: ${m.text}`)
+    .join('\n');
+  const current = { ...piece, layers: piece.layers.map(({ solo: _solo, ...rest }) => rest) };
+  return `Current piece:
 ${JSON.stringify(current)}
 
 Recent conversation:
 ${recent || '(none)'}
 
 Person's new request: ${request}`;
+}
+
+/** The whole prompt as one string, as the prototype sent it. */
+export function buildPrompt(request: string, piece: Piece, history: ChatMessage[]): string {
+  return `${INSTRUCTIONS}\n\n${buildRequest(request, piece, history)}`;
 }

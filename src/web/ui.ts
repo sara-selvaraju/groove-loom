@@ -5,7 +5,7 @@ import { BLANK, STARTER, cleanText, sanitizePiece, type Layer } from '../shared/
 import { INSTR, KEYS, MAX_LAYERS, SCALES } from '../shared/vocabulary.js';
 import { checkAudio, mediaSession, preload, unlockAudio, withSounds } from './audio.js';
 import { drawCloth, initCloth } from './cloth.js';
-import { ComposerError, composer, composerErrorText } from './composer.js';
+import { ComposerError, ServerComposer, aiAvailable, composerErrorText, type Composer } from './composer.js';
 import { record, saveCloth } from './export.js';
 import { compile, parsesAsMini } from './pattern.js';
 import { $, clone, save, state } from './state.js';
@@ -282,6 +282,43 @@ function snapshot(): void {
 /* ---------- Ask the AI ---------- */
 
 let ctl: AbortController | null = null;
+/** Null until the server says the AI is on. */
+let composer: Composer | null = null;
+
+const INVITE_KEY = 'gl.invite';
+function inviteCode(): string | null {
+  try {
+    return localStorage.getItem(INVITE_KEY);
+  } catch {
+    return null;
+  }
+}
+function setInviteCode(code: string | null): void {
+  try {
+    if (code) localStorage.setItem(INVITE_KEY, code);
+    else localStorage.removeItem(INVITE_KEY);
+  } catch {
+    // storage blocked: the code lasts until the page reloads
+  }
+  sessionInvite = code;
+}
+let sessionInvite: string | null = null;
+const currentInvite = () => inviteCode() ?? sessionInvite;
+
+function renderAiNote(): void {
+  const note = $('aiNote'),
+    form = $<HTMLFormElement>('inviteForm');
+  if (!composer) {
+    note.textContent = "The AI isn't switched on here. The knobs, mute, solo and undo still work.";
+    form.hidden = true;
+  } else if (!currentInvite()) {
+    note.textContent = 'Enter the invite code to use the AI. The knobs work without it.';
+    form.hidden = false;
+  } else {
+    note.textContent = '';
+    form.hidden = true;
+  }
+}
 
 async function ask(input: string): Promise<void> {
   const text = input.trim();
@@ -289,6 +326,13 @@ async function ask(input: string): Promise<void> {
   if (!composer) {
     state.log.push({ who: 'loom', text: composerErrorText('unavailable'), err: true });
     renderLog();
+    return;
+  }
+  if (!currentInvite()) {
+    state.log.push({ who: 'loom', text: 'Enter the invite code below first, then ask again.', err: true });
+    renderLog();
+    renderAiNote();
+    $<HTMLInputElement>('invite').focus();
     return;
   }
   const send = $<HTMLButtonElement>('send');
@@ -315,6 +359,10 @@ async function ask(input: string): Promise<void> {
     if (!(e instanceof ComposerError)) console.error('ask failed', e);
     pending.err = true;
     pending.text = composerErrorText(code);
+    if (code === 'forbidden') {
+      setInviteCode(null);
+      renderAiNote();
+    }
   } finally {
     state.busy = false;
     send.disabled = false;
@@ -408,6 +456,16 @@ function wire(): void {
     update();
   };
 
+  $('inviteForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const input = $<HTMLInputElement>('invite');
+    const code = input.value.trim();
+    if (!code) return;
+    input.value = '';
+    setInviteCode(code);
+    renderAiNote();
+  });
+
   $('record').onclick = () => {
     unlockAudio();
     mediaSession(true);
@@ -422,5 +480,8 @@ export function boot(): void {
   initCloth();
   update();
   renderLog();
-  if (!composer) $('aiNote').textContent = "The AI isn't connected yet. The knobs, mute, solo and undo still work.";
+  void aiAvailable().then((on) => {
+    composer = on ? new ServerComposer(currentInvite) : null;
+    renderAiNote();
+  });
 }

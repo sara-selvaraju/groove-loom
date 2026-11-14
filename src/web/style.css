@@ -119,3 +119,7 @@ pre.code .c{color:var(--muted)}
 .rec-note{margin-top:8px}
 .layers-head{margin-bottom:10px}
 .code-note{margin-top:8px}
+
+/* Invite code for testers */
+.invite{display:flex;flex-direction:column;gap:6px}
+.invite input{flex:1;min-width:0;font:inherit;color:var(--ink);background:var(--sunk);border:1px solid var(--line);border-radius:12px;padding:8px 12px}
