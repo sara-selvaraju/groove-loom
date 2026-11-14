@@ -47,6 +47,8 @@ jobs:
     timeout-minutes: 20
     # Required reviewers on this environment are the approval gate. The
     # Railway token is an environment secret, released only after approval.
+    # It is a project token scoped to production, so the Railway commands
+    # below target production without an --environment flag.
     environment:
       name: production
       url: ${{ vars.PRODUCTION_URL }}
@@ -55,6 +57,16 @@ jobs:
       RAILWAY_SERVICE: ${{ vars.RAILWAY_SERVICE }}
       PRODUCTION_URL: ${{ vars.PRODUCTION_URL }}
     steps:
+      - name: Check the production settings are set
+        run: |
+          missing=""
+          [ -n "$RAILWAY_TOKEN" ] || missing="$missing RAILWAY_TOKEN"
+          [ -n "$RAILWAY_SERVICE" ] || missing="$missing RAILWAY_SERVICE"
+          [ -n "$PRODUCTION_URL" ] || missing="$missing PRODUCTION_URL"
+          if [ -n "$missing" ]; then
+            echo "::error::Missing in the production environment:$missing. See docs/deployment.md, GitHub step 1."
+            exit 1
+          fi
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
@@ -62,7 +74,7 @@ jobs:
       - name: Install the Railway CLI
         run: npm install --global @railway/cli@5.74.0
       - name: Deploy to Railway
-        run: railway up --ci --service "$RAILWAY_SERVICE" --environment production
+        run: railway up --ci --service "$RAILWAY_SERVICE"
       - name: Wait for the new version to go live
         run: |
           expected="${GITHUB_REF_NAME#v}"

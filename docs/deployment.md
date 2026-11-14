@@ -10,7 +10,38 @@ Groove Loom runs as one Railway service: a small Node server (Hono) that serves 
 | Merge to `main` | `CI` workflow on the merge commit | Railway deploys to **staging** only after every workflow on that commit passes (Wait for CI). A failed run leaves the previous version running. |
 | Push of a `v*` tag | `Deploy production` workflow | Checks the tag, reruns `CI`, waits for approval, deploys to **production** with `railway up`, then waits until `/healthz` reports the new version. |
 
-Build, start and health check settings live in [`railway.json`](../railway.json) and apply to every environment. A deploy whose health check fails never replaces the running version.
+A deploy whose health check fails never replaces the running version.
+
+## Railway settings in code
+
+The service's Railway settings live in [`.railway/railway.ts`](../.railway/railway.ts), Railway's infrastructure as code format. One file covers both environments:
+
+| Setting | Staging | Production |
+|---|---|---|
+| Build and start commands | `npm run build`, `npm start` | same |
+| Health check | `/healthz`, 60 second timeout | same |
+| Restart policy | on failure, up to 3 times | same |
+| Source | GitHub `main`, with Wait for CI | none: deploys only come from the release workflow |
+
+The file is not read at deploy time. It is applied by hand with `railway config apply`, by someone signed in to the Railway CLI, whenever the file changes. A setting changed in the dashboard that the file also sets is put back on the next apply, so change the file instead.
+
+Applying from CI is not set up: `railway config plan` and `apply` were refused with a project token (CLI 5.74.0) even though other commands accepted the same token. Revisit once Railway fixes this; a staging-scoped project token as a repository secret and a workflow that plans on pull requests and applies on merge would be enough.
+
+Not in the file, and set in the dashboard: public domains, variables (such as `ANTHROPIC_API_KEY`), PR environments, and production's lack of a source. The file leaves production's source unmanaged rather than asserting there is none, so reconnecting a branch in the production dashboard would not be undone by an apply.
+
+Railway's older `railway.json` format (Config as Code) is deprecated: services created after the deprecation ignore it, and existing files stop working on 1 December 2026.
+
+To change a setting, edit the file in a pull request, then after merging apply it with the Railway CLI signed in to the account that owns the project:
+
+```sh
+railway link                                  # once: pick the project, an environment and the service
+railway config plan --environment staging     # preview
+railway config apply --environment staging    # apply; check staging
+railway config plan --environment production
+railway config apply --environment production
+```
+
+Read the plan before applying. Anything marked for deletion needs a second look; the CLI asks for `--confirm-destructive` before it will delete.
 
 ## Releasing
 
@@ -114,7 +145,7 @@ None are needed yet: Railway sets `PORT` itself. `ANTHROPIC_API_KEY` arrives wit
 |---|---|---|
 | Service name, for example `groove-loom` | Railway step 1 | `RAILWAY_SERVICE` variable |
 | Production address | Railway step 3 | `PRODUCTION_URL` variable, written as `https://<address>` with no trailing slash |
-| Production token | Railway step 5 | `RAILWAY_TOKEN` secret |
+| Production token | Railway step 5 | `RAILWAY_TOKEN` secret in the `production` environment |
 | Staging address | Railway step 2 | Not needed by GitHub; used to check staging after merging |
 
 ### GitHub
@@ -147,9 +178,9 @@ A tag ruleset targeting `v*` that restricts creation to admins stops anyone else
 
 1. **Merge the pipeline pull request.** CI runs on the merge commit, then Railway deploys staging. Watch it under the service's **Deployments** in `staging`.
 2. **Check staging.** Open the staging address. The page should say "Server is up: version 0.1.0" followed by a short build code. If **Wait for CI** was missing in Railway step 2, turn it on now.
-3. **Check `railway.json` is in use.** Railway does not copy the file's values into the service's **Settings** page, so empty build and start command fields there are normal. Instead, open the latest deploy under **Deployments** and look at its **Details**, which mark the settings that came from `railway.json`. The deploy logs should also show a health check on `/healthz`, which is only set in the file.
+3. **Apply the Railway settings.** Apply `.railway/railway.ts` to both environments by hand (see Railway settings in code). `railway config plan` should then report no changes, and the next deploy's **Details** should show the build and start commands, the `/healthz` health check and a restart limit of 3.
 4. **Release.** On an up-to-date `main`, run `npm version patch && git push --follow-tags`, or tag the current version with `git tag v0.1.0 && git push origin v0.1.0`. Approve the `production` deployment under **Actions → Deploy production**.
-5. **Check production.** The workflow ends once production reports the new version. Open the production address to confirm, then repeat check 3 for the production deploy.
+5. **Check production.** The workflow ends once production reports the new version. Open the production address to confirm, then check the production deploy's **Details** the same way.
 
 ## Local development
 
