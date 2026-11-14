@@ -42,3 +42,11 @@ test('the invite code shows as it is typed', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('#invite')).toHaveAttribute('type', 'text');
 });
+
+test('stays light on a device set to dark mode', async ({ browser }) => {
+  const context = await browser.newContext({ colorScheme: 'dark' });
+  const page = await context.newPage();
+  await page.goto('/');
+  await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(242, 245, 250)');
+  await context.close();
+});
