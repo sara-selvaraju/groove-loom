@@ -3,7 +3,7 @@
 import { drawFlat, fitCanvas, initFlatCloth } from './flat-cloth.js';
 import { $, state } from './state.js';
 import { createTapestry, type Tapestry } from './tapestry.js';
-import { makeRow } from './weave.js';
+import { COLS, makeRow } from './weave.js';
 
 let tap: Tapestry | null = null;
 
@@ -68,7 +68,22 @@ function frame(): void {
         state.curRow = makeRow(cyc, state.rows[0]?.sig);
       }
       drawCloth(ph);
+      pulseLegend(ph);
     }
-  }
+  } else if (pulsing) pulseLegend(null);
   requestAnimationFrame(frame);
+}
+
+let pulsing = false;
+/** Lights a layer's legend dot while one of its notes is sounding. */
+function pulseLegend(ph: number | null): void {
+  const spans = $('legend').children;
+  const at = ph == null ? -1 : ph * COLS;
+  pulsing = false;
+  for (let i = 0; i < spans.length; i++) {
+    const pick = state.curRow?.picks[i];
+    const on = at >= 0 && !!pick && !pick.muted && pick.segs.some((sg) => at >= sg.c0 && at < sg.c1);
+    spans[i]!.classList.toggle('sounding', on);
+    pulsing ||= on;
+  }
 }

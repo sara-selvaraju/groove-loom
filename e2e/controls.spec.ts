@@ -50,3 +50,23 @@ test('stays light on a device set to dark mode', async ({ browser }) => {
   await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(242, 245, 250)');
   await context.close();
 });
+
+test('on a phone, the play button on the loom plays and stops, and the legend lights up what sounds', async ({ browser }) => {
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const page = await context.newPage();
+  await page.goto('/');
+  await expect(page.locator('#loomPlay')).toBeVisible();
+  await page.locator('#loomPlay').click();
+  await expect(page.locator('#loomPlay')).toHaveAttribute('aria-label', 'Stop');
+  await expect(page.locator('#play')).toHaveAttribute('aria-label', 'Stop');
+  await expect(page.locator('.legend .sounding').first()).toBeAttached({ timeout: 15_000 });
+  await page.locator('#loomPlay').click();
+  await expect(page.locator('#loomPlay')).toHaveAttribute('aria-label', 'Play');
+  await context.close();
+});
+
+test('on a wide screen, the loom has no extra play button', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto('/');
+  await expect(page.locator('#loomPlay')).toBeHidden();
+});

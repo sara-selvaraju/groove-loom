@@ -25,6 +25,11 @@ export async function setPlaying(on: boolean): Promise<void> {
   state.curCycle = -1;
   state.playing = on;
   drawCloth();
-  $('play').setAttribute('aria-label', on ? 'Stop' : 'Play');
-  $('playIcon').innerHTML = on ? STOP_ICON : PLAY_ICON;
+  for (const [button, icon] of [
+    ['play', 'playIcon'],
+    ['loomPlay', 'loomPlayIcon'],
+  ]) {
+    $(button!).setAttribute('aria-label', on ? 'Stop' : 'Play');
+    $(icon!).innerHTML = on ? STOP_ICON : PLAY_ICON;
+  }
 }
