@@ -203,14 +203,11 @@ export function createTapestry(host: HTMLCanvasElement, tagBox: HTMLElement, onF
     const parts: Part[] = [];
     if (playing && curRow) parts.push({ row: curRow, upto: Math.ceil(ph * COLS) });
     else if (!rows.length) {
+      // Nothing woven yet: bare warp, with the first bar sketched faintly at the weaving edge.
       if (piece.layers.length) {
-        const per = pickList(makeRow(0, null)).reduce((n, pk) => n + depth(pk), 0),
-          n = Math.min(60, Math.ceil((fellNear - zTop) / PICK / per) + 2);
-        for (let c = n - 1; c >= 0; c--) {
-          const r = makeRow(c, null);
-          r.seed = 1000 + c;
-          parts.push({ row: r, ghost: true });
-        }
+        const r = makeRow(0, null);
+        r.seed = 999;
+        parts.push({ row: r, ghost: true });
       }
     } else {
       const r = makeRow(0, rows[0]?.sig);
