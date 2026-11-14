@@ -30,7 +30,7 @@
     </section>
 
     <section class="chat ask" aria-label="Tell the loom what you want">
-      <div class="ask-head"><h2 class="section-title">Tell the loom what you want</h2><button class="link-btn" id="clearChat" type="button">Clear chat</button></div>
+      <div class="ask-head"><h2 class="section-title">Tell the loom what you want</h2><div class="ask-links"><button class="link-btn" id="wordsOpen" type="button">Your words</button><button class="link-btn" id="clearChat" type="button">Clear chat</button></div></div>
       <div class="log" id="log" aria-live="polite"></div>
       <form class="ask-row" id="askForm">
         <textarea id="prompt" rows="2" placeholder="e.g. throw in a syncopated trumpet"></textarea>
@@ -47,6 +47,17 @@
       </form>
     </section>
   </main>
+
+  <dialog class="words-dialog" id="wordsDialog" aria-labelledby="wordsTitle">
+    <div class="words-head">
+      <h2 class="section-title" id="wordsTitle">Your words</h2>
+      <button class="link-btn" id="wordsClose" type="button">Close</button>
+    </div>
+    <p class="note">Music words you have picked up here, kept on this device. Try them in your next request; a tick means you already have.</p>
+    <p class="words-empty" id="wordsEmpty">No words yet. Ask for a sound or a feel, and the music words behind it will collect here.</p>
+    <ul class="words-list" id="wordsList"></ul>
+    <button class="link-btn" id="wordsForget" type="button" hidden>Forget my words</button>
+  </dialog>
 
   <section class="deck" aria-label="Playback and the whole piece">
     <div class="deck-controls">

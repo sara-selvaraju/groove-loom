@@ -110,3 +110,83 @@ export function describeChanges(before: Piece, after: Piece): string[] {
   }
   return out;
 }
+
+/* ---------- Your words: the glossary a person builds up across sessions ---------- */
+
+/** One music word in a person's collection. Kept on their device only. */
+export interface Learnt {
+  term: string;
+  meaning: string;
+  /** Their own words that led to it, newest last. */
+  said: string[];
+  /** Times they have used the term themselves in a request since learning it. */
+  used: number;
+}
+
+export const MAX_LEARNT = 60;
+/** Terms sent with a request so the AI knows what the person has learnt. */
+export const MAX_LEARNT_SENT = 40;
+
+const keyOf = (term: string) => term.trim().toLowerCase();
+
+/** A collection read back from storage: anything malformed is dropped. */
+export function sanitizeCollection(raw: unknown): Learnt[] {
+  if (!Array.isArray(raw)) return [];
+  const out: Learnt[] = [];
+  const seen = new Set<string>();
+  for (const e of raw) {
+    if (!e || typeof e !== 'object') continue;
+    const r = e as Record<string, unknown>;
+    const term = cleanText(r.term, 32).trim();
+    const meaning = cleanText(r.meaning, 140).trim();
+    if (!term || !meaning || seen.has(keyOf(term))) continue;
+    seen.add(keyOf(term));
+    const said = Array.isArray(r.said) ? r.said.map((s) => cleanText(s, 40).trim()).filter(Boolean).slice(-5) : [];
+    const used = typeof r.used === 'number' && Number.isFinite(r.used) ? Math.max(0, Math.min(9999, Math.floor(r.used))) : 0;
+    out.push({ term, meaning, said, used });
+  }
+  return out.slice(-MAX_LEARNT);
+}
+
+/** Adds a reply's words to the collection. A known term gains the new phrasing; its meaning stays as first learnt. */
+export function addWords(collection: Learnt[], words: Word[]): Learnt[] {
+  const out = collection.map((e) => ({ ...e, said: [...e.said] }));
+  for (const w of words) {
+    const known = out.find((e) => keyOf(e.term) === keyOf(w.term));
+    if (known) {
+      if (w.said && !known.said.some((s) => s.toLowerCase() === w.said.toLowerCase())) known.said = [...known.said, w.said].slice(-5);
+    } else {
+      out.push({ term: w.term, meaning: w.meaning, said: w.said ? [w.said] : [], used: 0 });
+    }
+  }
+  return out.slice(-MAX_LEARNT);
+}
+
+const spaced = (s: string) => ` ${s.toLowerCase().replace(/[^a-z0-9#]+/g, ' ').trim()} `;
+
+/**
+ * The known terms a person used in their own request. Case, hyphens and a
+ * plural "s" are ignored, so "off-beat", "offbeat" and "off beats" all count.
+ */
+export function usedTerms(request: string, terms: string[]): string[] {
+  const text = spaced(request);
+  const compact = text.replace(/ /g, '');
+  return terms.filter((t) => {
+    const s = spaced(t).trim();
+    if (!s) return false;
+    if (text.includes(` ${s} `) || text.includes(` ${s}s `) || text.includes(` ${s}es `)) return true;
+    // a multi-word term written as one word ("offbeat" for "off beat")
+    return s.includes(' ') && compact.includes(s.replace(/ /g, ''));
+  });
+}
+
+/** Terms from a request body, checked: at most forty short strings. */
+export function sanitizeLearntTerms(raw: unknown): string[] | null {
+  if (raw === undefined) return [];
+  if (!Array.isArray(raw)) return null;
+  return raw
+    .filter((t): t is string => typeof t === 'string')
+    .map((t) => cleanText(t, 32).trim())
+    .filter(Boolean)
+    .slice(-MAX_LEARNT_SENT);
+}

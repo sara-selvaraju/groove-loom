@@ -13,6 +13,7 @@ import { compile, parsesAsMini } from './pattern.js';
 import { $, clone, save, state } from './state.js';
 import { setPlaying } from './transport.js';
 import { LAYER_VARS, makeRow } from './weave.js';
+import { learntTerms, recordExchange, wireWords } from './words.js';
 
 const CHIPS = [
   'Start me off with a 4/4 beat',
@@ -469,7 +470,7 @@ async function ask(input: string): Promise<void> {
   renderLog();
   ctl = new AbortController();
   try {
-    const res = await composer.compose({ request: text, piece: state.piece, history }, ctl.signal);
+    const res = await composer.compose({ request: text, piece: state.piece, history, learnt: learntTerms() }, ctl.signal);
     const next = sanitizePiece(res.piece, state.piece, parsesAsMini);
     if (!next) throw new ComposerError('invalid_json');
     snapshot();
@@ -478,6 +479,7 @@ async function ask(input: string): Promise<void> {
     pending.text = cleanText(res.reply, 500) || 'Done.';
     pending.words = sanitizeWords(res.words);
     pending.changes = describeChanges(before, next);
+    recordExchange(text, pending.words);
     update();
   } catch (e) {
     const code = e instanceof ComposerError ? e.code : 'failed';
@@ -635,6 +637,7 @@ function wire(): void {
 export function boot(): void {
   state.piece = sanitizePiece(state.piece, STARTER, parsesAsMini) ?? (sanitizePiece(STARTER, null, parsesAsMini) as typeof state.piece);
   wire();
+  wireWords();
   initCloth();
   update();
   renderLog();

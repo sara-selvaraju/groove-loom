@@ -1,6 +1,6 @@
 // The instructions sent to the AI with each request. Shared so the server can
 // build the same prompt when it holds the key (task 4).
-import type { Word } from './learning.js';
+import { usedTerms, type Word } from './learning.js';
 import type { Piece } from './piece.js';
 import { KEYS, MAX_LAYERS, SCALES, instrumentList } from './vocabulary.js';
 
@@ -28,6 +28,8 @@ The app is a way to learn how everyday words map to music, so every reply teache
 
 "words": 0 to 3 entries linking words the person used to the music idea you used for them, shown as a small glossary under your reply. Word = {"said": their word or phrase, as they wrote it, "term": the music term, "meaning": what it means in one plain sentence of under 20 words}. e.g. {"said": "groovier", "term": "swing", "meaning": "every second note lands a little late, so the beat bounces"}, {"said": "syncopated", "term": "off-beat", "meaning": "hits land between the main beats, which makes you want to move"}, {"said": "sad", "term": "minor scale", "meaning": "a set of notes with a lowered third that sounds moody"}. Pick the ideas most worth learning. Use [] when the request has no musical idea to teach (for example "make the bass louder").
 
+The request may list music words the person has already learnt here. Don't put those in "words" again; teach something new or use []. If they used one of their words themselves, say so warmly in a few words ("'swing' is exactly the right word"), because using the words is what they came to learn. Now and then, when it fits naturally (about one reply in three, never as a lecture), end the reply with a short tip on how they could ask next time using one of their words, e.g. "Next time you could ask for 'less swing' to straighten it out."
+
 Piece = {"tempo": 60-180 (bpm), "key": one of ${JSON.stringify(KEYS)}, "scale": one of ${JSON.stringify(Object.keys(SCALES))}, "swing": 0-1 (0 straight, 0.5 swung, 1 heavy shuffle), "layers": Layer[] (at most ${MAX_LAYERS})}
 
 Layer = {"id": short slug, keep existing ids for layers you keep, "name": 1-3 words shown to the person, "instrument": one of [${instrumentList()}], "notes": pitched instruments only, "rhythm": Rhythm or omitted, "volume": 0-1, "tone": 0-1 (0.5 natural, lower is darker and muffled, higher is brighter), "space": 0-1 (reverb), "echo": 0-1 (echo repeats, timed to the beat; 0 for none), "grit": 0-1 (0 clean, around 0.3 warm saturation, higher is distorted), "accent": louder and softer hits as numbers 0-1 in the same notation as notes, lining up with the hits (e.g. "[1 .55]*4" strong then soft, "1 .6 .8 .6" a stress on beat one), or null for even hits, "octave": -2..2 shift (optional), "muted": boolean, "about": one short plain sentence on what this layer does}
@@ -42,7 +44,7 @@ Drums must have a rhythm. For pitched layers the rhythm is optional: with a rhyt
 Keep everything the person did not ask to change. Respect their mutes and knob settings unless they ask otherwise. Keep it musical: bass usually octave 0 with roots, pads slow and quiet, leads not too busy. Use echo, grit and accents when they suit the request (dub and spacey sounds like echo; rock and lo-fi like grit; accents make drums feel played), and leave them at 0 or null otherwise. Prefer the recorded instruments; use the synth ones when the person asks for an electronic, retro or synthy sound.`;
 
 /** The per-request part: the current piece, the recent conversation and the new request. */
-export function buildRequest(request: string, piece: Piece, history: ChatMessage[]): string {
+export function buildRequest(request: string, piece: Piece, history: ChatMessage[], learnt: string[] = []): string {
   const recent = history
     .filter((m) => !m.err)
     .slice(-6)
@@ -53,9 +55,13 @@ export function buildRequest(request: string, piece: Piece, history: ChatMessage
     piece.layers.length >= MAX_LAYERS
       ? `\nThe piece already has ${piece.layers.length} layers, the most it can hold. To add a layer, replace or remove one and say which in your reply.\n`
       : '';
+  const used = usedTerms(request, learnt);
+  const words = learnt.length
+    ? `\nMusic words this person has already learnt: ${learnt.join(', ')}.${used.length ? ` They used these themselves in this request: ${used.join(', ')}.` : ''}\n`
+    : '';
   return `Current piece:
 ${JSON.stringify(current)}
-${full}
+${full}${words}
 Recent conversation:
 ${recent || '(none)'}
 
@@ -63,6 +69,6 @@ Person's new request: ${request}`;
 }
 
 /** The whole prompt as one string, as the prototype sent it. */
-export function buildPrompt(request: string, piece: Piece, history: ChatMessage[]): string {
-  return `${INSTRUCTIONS}\n\n${buildRequest(request, piece, history)}`;
+export function buildPrompt(request: string, piece: Piece, history: ChatMessage[], learnt: string[] = []): string {
+  return `${INSTRUCTIONS}\n\n${buildRequest(request, piece, history, learnt)}`;
 }

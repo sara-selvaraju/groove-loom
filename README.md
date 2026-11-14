@@ -11,6 +11,7 @@ Groove Loom is for students and explorers of music: people who want to create wi
 Type what you hear in your head: "start me off with a beat", "make it bouncier", "something sad on top". Each request becomes a layer you hear straight away, and every reply teaches a little:
 
 - **Your words, matched to music's words.** "groovier" → **swing**: every second note lands a little late, so the beat bounces. Next time, you can ask for swing.
+- **Your words, kept.** Every word you learn collects in a **Your words** list on your device, with the phrases of yours that led to it. Use one in a later request and it gets a tick; the AI notices, builds on the words you know, and now and then suggests how to ask with them.
 - **Exactly what changed.** "Tempo 100 → 110 beats a minute, faster", "+ Trumpet", "Hi-hats: some hits louder than others". The app works this out itself, so it is always accurate.
 - **The shape and maths of a pattern.** "3 hits spread as evenly as possible over 8 steps."
 - **Patterns you can see.** As the music plays, a loom weaves it into a tapestry. Each layer is a coloured thread, raised wherever that layer sounds, and each bar is a band. Patterns you hear become patterns you can see.

@@ -10,6 +10,8 @@ export interface ComposeRequest {
   request: string;
   piece: Piece;
   history: ChatMessage[];
+  /** Music words the person has learnt, so the AI can build on them. */
+  learnt?: string[];
 }
 
 export interface ComposeResult {
@@ -93,6 +95,7 @@ export class ServerComposer implements Composer {
           request: req.request,
           piece: req.piece,
           history: req.history.map(({ who, text, err }) => ({ who, text, err: !!err })),
+          learnt: req.learnt ?? [],
         }),
         signal,
       });

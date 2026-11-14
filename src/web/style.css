@@ -777,3 +777,76 @@ pre.code {
     scroll-behavior: auto !important;
   }
 }
+
+/* ---------- Your words ---------- */
+
+.ask-links {
+  display: flex;
+  gap: 4px;
+  align-items: baseline;
+}
+/* The collection is the point of the app, so it reads as an action, not a footnote. */
+#wordsOpen {
+  color: var(--accent);
+  font-weight: 600;
+}
+.words-dialog {
+  width: min(520px, calc(100vw - 32px));
+  max-height: min(640px, calc(100dvh - 48px));
+  padding: 20px 22px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: 0 24px 60px rgb(29 35 64 / 0.22);
+}
+.words-dialog::backdrop {
+  background: rgb(29 35 64 / 0.35);
+}
+.words-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+}
+.words-empty {
+  margin: 16px 0 4px;
+  color: var(--muted);
+}
+.words-list {
+  list-style: none;
+  margin: 14px 0 10px;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+.words-list li {
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--accent) 7%, var(--surface));
+}
+.words-list .w-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  align-items: baseline;
+}
+.words-list .term {
+  font-weight: 650;
+  color: var(--accent);
+}
+.words-list .used {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--l2);
+  color: color-mix(in srgb, var(--l2) 70%, var(--ink));
+}
+.words-list .meaning {
+  margin: 2px 0 0;
+  font-size: 14px;
+}
+.words-list .from {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+}
