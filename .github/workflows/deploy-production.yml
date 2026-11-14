@@ -55,6 +55,16 @@ jobs:
       RAILWAY_SERVICE: ${{ vars.RAILWAY_SERVICE }}
       PRODUCTION_URL: ${{ vars.PRODUCTION_URL }}
     steps:
+      - name: Check the production settings are set
+        run: |
+          missing=""
+          [ -n "$RAILWAY_TOKEN" ] || missing="$missing RAILWAY_TOKEN"
+          [ -n "$RAILWAY_SERVICE" ] || missing="$missing RAILWAY_SERVICE"
+          [ -n "$PRODUCTION_URL" ] || missing="$missing PRODUCTION_URL"
+          if [ -n "$missing" ]; then
+            echo "::error::Missing in the production environment:$missing. See docs/deployment.md, GitHub step 1."
+            exit 1
+          fi
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:

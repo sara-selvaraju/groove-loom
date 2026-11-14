@@ -30,6 +30,12 @@ jobs:
     env:
       RAILWAY_TOKEN: ${{ secrets.RAILWAY_STAGING_TOKEN }}
     steps:
+      - name: Check the staging token is set
+        run: |
+          if [ -z "$RAILWAY_TOKEN" ]; then
+            echo "::error::The RAILWAY_STAGING_TOKEN repository secret is not set. See docs/deployment.md, GitHub step 2."
+            exit 1
+          fi
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
@@ -39,6 +45,7 @@ jobs:
       - run: npm install --global "@railway/cli@$RAILWAY_CLI_VERSION"
       - name: Plan
         run: |
+          set -o pipefail
           railway config plan --environment staging --verbose | tee plan.txt
           {
             echo '### Railway plan for staging'
@@ -55,6 +62,12 @@ jobs:
     env:
       RAILWAY_TOKEN: ${{ secrets.RAILWAY_STAGING_TOKEN }}
     steps:
+      - name: Check the staging token is set
+        run: |
+          if [ -z "$RAILWAY_TOKEN" ]; then
+            echo "::error::The RAILWAY_STAGING_TOKEN repository secret is not set. See docs/deployment.md, GitHub step 2."
+            exit 1
+          fi
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
