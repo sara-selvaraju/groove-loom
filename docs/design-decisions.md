@@ -54,8 +54,14 @@ On iPhone the page played silently while the shuttle moved. Two causes, both fix
 1. Audio has to be started synchronously inside the tap. The play button originally awaited the audio engine first, so the browser no longer treated the call as part of the tap.
 2. iPhones mute Web Audio when the ringer switch is on silent, unless the page is playing a media element. A looping, near-silent WAV plays alongside the music to mark the page as a media player.
 
+## Hosting, CI/CD and who pays for the AI
+
+- **Railway** hosts the app, deployed through a proper pipeline rather than from a laptop: GitHub Actions runs the checks; staging autodeploys from `main` only after they pass (Railway's Wait for CI); production deploys from version tags behind an approval step.
+- **Prototype and testing phase:** the project owner pays for API usage through a server-held key. Because the URL is public, the endpoint is protected with an access gate, rate limits, output caps and a spend limit on the key.
+- **Production phase:** users bring their own key and choose their own model. Keys stay in the user's browser and requests go directly to the provider, so the service never holds anyone's credentials. This also keeps running costs near zero for the project and for anyone who forks it.
+- Both phases sit behind one `Composer` interface, so moving from phase 1 to phase 2 adds code rather than rewriting it, and every response still passes the same validation.
+
 ## Open questions
 
-- Hosting and cost control for the AI backend.
-- Whether the public version uses a server-held key with rate limits, lets people bring their own key, or both.
 - Where forkers are most likely to extend: visualisers, instrument packs, the AI's musical vocabulary, or all three. This decides where the extension points go.
+- Which providers and models to offer in phase 2, decided by the eval set rather than by reputation.

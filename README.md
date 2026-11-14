@@ -22,7 +22,7 @@ Playback, the knobs, mute, solo, undo, the tapestry and MP3 recording all work l
 - **AI requests** use the artifact's `sample` capability to call Claude. Outside claude.ai the page says the AI is unavailable.
 - **Saving files** (MP3 and cloth image) uses the artifact's `downloads` capability.
 
-Replacing both is the first piece of work in the brief.
+The plan for replacing both, and for hosting on Railway, is in the brief.
 
 ## How it works
 

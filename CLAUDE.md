@@ -46,7 +46,7 @@ Full reasoning is in [docs/design-decisions.md](docs/design-decisions.md). The s
 
 These exist only because the prototype ran inside the claude.ai artifact sandbox:
 
-- **AI calls** go through `claude.use("sample")`. Replace with a small backend endpoint that calls the Claude API, keeps the API key server-side, asks for the same JSON shape (ideally via tool use or structured outputs with a JSON schema), and rate-limits. Validate on the server and again in the client.
+- **AI calls** go through `claude.use("sample")`. Replace with the composer described under "Hosting, deployment and AI keys" below.
 - **Saving files** goes through `claude.use("downloads")`, and the MP3 is wrapped in a zip because that capability would not accept `.mp3`. Replace with a normal download of the `.mp3` directly.
 - **Audio worklet redirect.** Strudel embeds its worklets as `data:` URLs, which the artifact security policy blocked, so a shim rewrites them to the extracted files next to the page. In a normal app, either drop the shim or keep the files and set a policy that allows them.
 - **Libraries from CDNs** (`@strudel/web` 1.3.0, three r128, lamejs 1.2.1) were loaded as UMD scripts because the artifact could not bundle. Use npm packages and ES modules instead; current three.js no longer ships UMD builds.
@@ -62,14 +62,31 @@ These exist only because the prototype ran inside the claude.ai artifact sandbox
 - Notes far outside an instrument's sampled range are repitched heavily and can sound odd.
 - The AI prompt has had little tuning against real requests.
 
+## Hosting, deployment and AI keys
+
+Decided:
+
+- **Hosting: Railway**, one service to start: a small Node server (for example Hono) that serves the built front end, `/api/compose` and `/healthz`. Build, start and health check settings live in config as code (`railway.json`), not only in the dashboard.
+- **CI/CD: GitHub Actions for checks, Railway for deploys.**
+  - CI runs on every pull request and on every push to `main`: install, lint, typecheck, unit tests, build, and a headless browser smoke test (page loads, plays, tapestry draws, no console errors).
+  - **Staging** autodeploys from `main` with Railway's **Wait for CI** setting on, so a commit deploys only after every workflow on it passes; a failed run leaves the previous version running.
+  - **Production** deploys from a version tag (`v*`) through a GitHub Actions workflow that runs `railway up --ci --service <service> --environment production` with a production-scoped Railway project token in `RAILWAY_TOKEN`, behind a GitHub environment that needs approval.
+  - **PR environments** are on for previews. They copy the base environment's variables, including the API key, so the spend guardrails below apply to them too.
+- **AI keys: two phases behind one interface.** The front end calls a `Composer` with `compose({request, piece, history}) → {reply, piece}`. Whatever implements it, the result passes through `sanitizePiece` before use.
+  - **Phase 1, prototype and testing: server-held key.** The project owner pays. `ServerComposer` posts to `/api/compose`; the server holds `ANTHROPIC_API_KEY` as a Railway variable (a separate key per environment), asks Claude for the `{reply, piece}` JSON through a JSON schema, validates it, and returns it. Guardrails, because the URL is public and the key is not: an access gate during testing (an invite code is enough), per-client rate limits, a cap on output tokens, and a spend limit set on each key in the Anthropic Console. Never log request bodies with keys or personal data.
+  - **Phase 2, production: bring your own key and model.** A settings panel takes provider, model and key. The key stays in the browser (this session by default, "remember on this device" as an opt-in) and requests go straight from the browser to the provider, so the server never holds anyone's key. Anthropic allows this with the `anthropic-dangerous-direct-browser-access` header; a provider that blocks browser requests needs a stateless pass-through on the server that never stores or logs keys. Each provider is a small adapter behind `Composer`. Models differ in how reliably they follow the schema, so a small eval set of requests checks that a model's output passes `sanitizePiece` and sounds sensible before it is offered in the list. Keys in the browser make a strict Content Security Policy essential: no third-party scripts at runtime, no inline script.
+  - Phase 1 stays available as a server mode for forks that self-host.
+
 ## First tasks (suggested order, tracer bullet first)
 
-1. **Scaffold** a Vite + TypeScript app. Port the prototype into modules with no change in behaviour: `vocabulary`, `piece` (types and `sanitizePiece`), `compiler`, `audio`, `ai`, `tapestry`, `flat-cloth`, `export`, `ui`. Keep `prototype/` as the reference until the port matches it.
-2. **Tests** for the parts where a bug would hurt most: `sanitizePiece` against hostile and malformed input, the mini-notation whitelist, and `compiler` (piece in, call list and code listing out, as snapshots).
-3. **AI backend**: one endpoint, server-held key, schema-checked JSON out. Hosting is an open decision.
-4. **Share links**: piece JSON compressed into the URL.
-5. **Tapestry**: incremental texture updates, ES-module three.js, Save cloth rendered from the tapestry itself.
-6. **Export**: AudioWorklet recorder, direct MP3 download, optional WAV.
+1. **Pipeline first.** A skeleton Vite + TypeScript front end and Node server, deployed through the full path: CI on a pull request, staging deploy after merge with Wait for CI, production deploy from a tag. Prove the pipe end to end before porting anything.
+2. **Port** the prototype into modules with no change in behaviour: `vocabulary`, `piece` (types and `sanitizePiece`), `compiler`, `audio`, `composer`, `tapestry`, `flat-cloth`, `export`, `ui`. Keep `prototype/` as the reference until the port matches it.
+3. **Tests** where a bug would hurt most: `sanitizePiece` against hostile and malformed input, the mini-notation whitelist, and `compiler` (piece in, call list and code listing out, as snapshots). Add the smoke test to CI.
+4. **Phase 1 AI**: the `Composer` interface, `ServerComposer`, `/api/compose` with the guardrails above.
+5. **Share links**: piece JSON compressed into the URL.
+6. **Tapestry**: incremental texture updates, ES-module three.js, Save cloth rendered from the tapestry itself.
+7. **Export**: AudioWorklet recorder, direct MP3 download, optional WAV.
+8. **Phase 2 AI**: settings panel, browser-side provider adapters, model eval set.
 
 ## Conventions
 
