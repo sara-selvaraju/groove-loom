@@ -1,7 +1,9 @@
 // The page's controls, layer cards and conversation, and the update cycle
 // that keeps sound, cloth and code listing in step with the piece.
 import { codeFor, audible, patternText } from '../shared/compiler.js';
+import { describeChanges, sanitizeChanges, sanitizeWords, type Word } from '../shared/learning.js';
 import { BLANK, STARTER, cleanText, sanitizePiece, type Layer } from '../shared/piece.js';
+import type { ChatMessage } from '../shared/prompt.js';
 import { INSTR, KEYS, MAX_LAYERS, SCALES } from '../shared/vocabulary.js';
 import { checkAudio, mediaSession, preload, setVolume, unlockAudio, withSounds } from './audio.js';
 import { drawCloth, initCloth } from './cloth.js';
@@ -20,6 +22,12 @@ const CHIPS = [
   'Try 3 against 4 on the drums',
   'Strip it back to drums and bass',
 ];
+
+/** Hover help for the pattern line under each layer. */
+const PATTERN_HELP =
+  'notes: steps up the scale from the home note (0 is the home note, 7 is the same note higher, ~ is a rest).\n' +
+  'rhythm: x is a hit and ~ is a rest; spaces share the bar out evenly.\n' +
+  'accent: how hard each hit is, from 0 (silent) to 1 (full).';
 
 /* ---------- Rendering ---------- */
 
@@ -162,6 +170,7 @@ function renderLayers(): void {
     card.append(draft);
     const pat = document.createElement('div');
     pat.className = 'pat mono';
+    pat.title = PATTERN_HELP;
     pat.textContent = patternText(L);
     card.append(pat);
     const k = document.createElement('div');
@@ -280,9 +289,57 @@ function renderLog(): void {
     w.className = 'who';
     w.textContent = m.who === 'you' ? 'You' : 'Loom';
     d.append(w, document.createTextNode(m.text));
+    if (m.who === 'loom' && !m.err) appendLesson(d, sanitizeWords(m.words), sanitizeChanges(m.changes));
     box.append(d);
   }
   box.scrollTop = box.scrollHeight;
+}
+
+/**
+ * Under a reply: the person's words linked to the music ideas behind them, then
+ * what the app saw change. Text only, never markup.
+ */
+function appendLesson(msg: HTMLElement, words: Word[], changes: string[]): void {
+  if (words.length) {
+    const dl = document.createElement('dl');
+    dl.className = 'words';
+    for (const w of words) {
+      const dt = document.createElement('dt');
+      if (w.said) {
+        const said = document.createElement('span');
+        said.className = 'said';
+        said.textContent = `“${w.said}”`;
+        const arrow = document.createElement('span');
+        arrow.className = 'arrow';
+        arrow.setAttribute('aria-label', 'means');
+        arrow.textContent = ' → ';
+        dt.append(said, arrow);
+      }
+      const term = document.createElement('span');
+      term.className = 'term';
+      term.textContent = w.term;
+      dt.append(term);
+      const dd = document.createElement('dd');
+      dd.textContent = w.meaning;
+      dl.append(dt, dd);
+    }
+    msg.append(dl);
+  }
+  if (changes.length) {
+    const box = document.createElement('div');
+    box.className = 'changes';
+    const h = document.createElement('span');
+    h.className = 'changes-title';
+    h.textContent = 'What changed';
+    const ul = document.createElement('ul');
+    for (const c of changes) {
+      const li = document.createElement('li');
+      li.textContent = c;
+      ul.append(li);
+    }
+    box.append(h, ul);
+    msg.append(box);
+  }
 }
 
 /* ---------- Update cycle ---------- */
@@ -407,7 +464,7 @@ async function ask(input: string): Promise<void> {
   const history = state.log.slice();
   state.log.push({ who: 'you', text });
   renderLog();
-  const pending = { who: 'loom' as const, text: 'Listening and arranging. This can take up to a minute.', err: false };
+  const pending: ChatMessage = { who: 'loom', text: 'Listening and arranging. This can take up to a minute.', err: false };
   state.log.push(pending);
   renderLog();
   ctl = new AbortController();
@@ -416,8 +473,11 @@ async function ask(input: string): Promise<void> {
     const next = sanitizePiece(res.piece, state.piece, parsesAsMini);
     if (!next) throw new ComposerError('invalid_json');
     snapshot();
+    const before = state.piece;
     state.piece = next;
     pending.text = cleanText(res.reply, 500) || 'Done.';
+    pending.words = sanitizeWords(res.words);
+    pending.changes = describeChanges(before, next);
     update();
   } catch (e) {
     const code = e instanceof ComposerError ? e.code : 'failed';

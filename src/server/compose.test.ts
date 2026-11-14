@@ -17,6 +17,7 @@ const staticRoot = mkdtempSync(join(tmpdir(), 'groove-loom-compose-'));
 
 const GOOD_REPLY = {
   reply: 'I added a trumpet playing 3 notes spread over 8 steps.',
+  words: [{ said: 'syncopated', term: 'off-beat', meaning: 'hits land between the main beats' }],
   piece: {
     tempo: 100,
     key: 'A',
@@ -102,8 +103,9 @@ describe('POST /api/compose: success', () => {
     const { post } = setup();
     const res = await post(ask);
     expect(res.status).toBe(200);
-    const body = (await res.json()) as { reply: string; piece: { layers: { id: string }[] } };
+    const body = (await res.json()) as { reply: string; words: unknown; piece: { layers: { id: string }[] } };
     expect(body.reply).toBe(GOOD_REPLY.reply);
+    expect(body.words).toEqual(GOOD_REPLY.words);
     expect(body.piece.layers.map((l: { id: string }) => l.id)).toEqual(['kick', 'snare', 'hats', 'bass', 'tpt']);
   });
 
@@ -132,14 +134,22 @@ describe('POST /api/compose: success', () => {
     expect(calls[0]!.betas).toBeUndefined();
   });
 
+  it('returns no words when the reply has none', async () => {
+    const { post } = setup({ reply: message({ text: JSON.stringify({ reply: 'ok', piece: GOOD_REPLY.piece }) }) });
+    expect(((await (await post(ask)).json()) as { words: unknown }).words).toEqual([]);
+  });
+
   it('drops anything hostile in the model reply', async () => {
     const hostile = {
       reply: 'ok',
+      words: [{ said: 'x', term: 'swing', meaning: 'm', script: 'alert(1)' }, 'junk', ...Array(5).fill({ said: 's', term: 't', meaning: 'm' })],
       piece: { tempo: 9999, key: 'H', scale: 'evil', swing: 0, code: 'alert(1)', layers: [{ id: '<x>', instrument: 'theremin' }, { instrument: 'kick', name: 'K', extra: 1 }] },
     };
     const { post } = setup({ reply: message({ text: JSON.stringify(hostile) }) });
-    type Out = { piece: { tempo: number; key: string; code?: string; layers: Record<string, unknown>[] } };
+    type Out = { words: Record<string, unknown>[]; piece: { tempo: number; key: string; code?: string; layers: Record<string, unknown>[] } };
     const body = (await (await post(ask)).json()) as Out;
+    expect(body.words).toHaveLength(3);
+    expect(body.words[0]).toEqual({ said: 'x', term: 'swing', meaning: 'm' });
     expect(body.piece.tempo).toBe(180);
     expect(body.piece.key).toBe('A'); // falls back to the current piece
     expect(body.piece.code).toBeUndefined();

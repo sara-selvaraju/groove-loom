@@ -34,7 +34,8 @@ test('asks for the invite code, then adds a layer from the AI reply', async ({ p
     seen = body;
     if (invite !== 'open-sesame') return { status: 401, json: { error: 'forbidden' } };
     const piece = body.piece as { layers: unknown[] };
-    return { status: 200, json: { reply: 'I added a trumpet: 3 notes spread over 8 steps.', piece: { ...piece, layers: [...piece.layers, trumpet] } } };
+    const words = [{ said: 'syncopated', term: 'off-beat', meaning: 'hits land between the main beats' }];
+    return { status: 200, json: { reply: 'I added a trumpet: 3 notes spread over 8 steps.', words, piece: { ...piece, tempo: 110, layers: [...piece.layers, trumpet] } } };
   });
   await page.goto('/');
   await expect(page.locator('#inviteForm')).toBeVisible();
@@ -45,14 +46,20 @@ test('asks for the invite code, then adds a layer from the AI reply', async ({ p
   await expect(page.locator('#inviteForm')).toBeHidden();
 
   await page.click('.chip >> text=Throw in a syncopated trumpet');
-  await expect(page.locator('.msg.loom').last()).toContainText('I added a trumpet');
+  const reply = page.locator('.msg.loom').last();
+  await expect(reply).toContainText('I added a trumpet');
+  // The words the person used, linked to the music idea, then what the app saw change.
+  await expect(reply.locator('.words dt')).toHaveText('“syncopated” → off-beat');
+  await expect(reply.locator('.words dd')).toHaveText('hits land between the main beats');
+  await expect(reply.locator('.changes li')).toHaveText(['Tempo 100 → 110 beats a minute, faster', '+ Trumpet']);
   await expect(page.locator('.layer')).toHaveCount(5);
   await expect(page.locator('#code')).toContainText('s("trumpet")');
   expect(seen?.request).toBe('Throw in a syncopated trumpet');
 
-  // The code is remembered on this device.
+  // The code is remembered on this device, and so is the conversation with its glossary.
   await page.reload();
   await expect(page.locator('#inviteForm')).toBeHidden();
+  await expect(page.locator('.msg.loom .words dd')).toHaveText('hits land between the main beats');
 });
 
 test('a wrong invite code is forgotten and the form comes back', async ({ page }) => {
