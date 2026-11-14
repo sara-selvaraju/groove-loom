@@ -2,7 +2,7 @@
 // browser storage. These tests feed it hostile and malformed input.
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { STARTER, sanitizePiece, type Piece } from './piece.js';
+import { STARTER, droppedLayers, droppedNote, sanitizePiece, type Piece } from './piece.js';
 import { parsesAsMini } from './test-support.js';
 import { INSTR, MAX_LAYERS } from './vocabulary.js';
 
@@ -259,5 +259,33 @@ describe('sanitizePiece: muted and solo', () => {
     const out = one({ instrument: 'kick', muted: 'yes', solo: 0 })! as Piece['layers'][number];
     expect(out.muted).toBe(true);
     expect(out.solo).toBe(false);
+  });
+});
+
+describe('droppedLayers and droppedNote', () => {
+  const nine = { layers: [...Array.from({ length: 8 }, (_, i) => ({ id: `l${i}`, instrument: 'kick', name: `Drum ${i}` })), { id: 'p', instrument: 'piano', name: 'Piano' }] };
+
+  it('names a layer left out because the loom was full', () => {
+    const kept = sanitize(nine)!;
+    expect(kept.layers).toHaveLength(MAX_LAYERS);
+    const d = droppedLayers(nine, kept);
+    expect(d).toEqual({ overLimit: ['Piano'], unknownInstrument: [] });
+    expect(droppedNote(d)).toBe(`The loom holds at most ${MAX_LAYERS} layers, so Piano wasn't added. Remove a layer, or ask me to swap one out.`);
+  });
+
+  it('names layers with instruments the loom does not have', () => {
+    const raw = { layers: [{ instrument: 'kick' }, { instrument: 'theremin', name: 'Spooky' }, { instrument: 'banjo' }] };
+    const d = droppedLayers(raw, sanitize(raw)!);
+    expect(d).toEqual({ overLimit: [], unknownInstrument: ['Spooky', 'banjo'] });
+    expect(droppedNote(d)).toBe("Spooky and banjo used an instrument the loom doesn't have, so they were left out.");
+  });
+
+  it('counts aliases as known instruments', () => {
+    const raw = { layers: [{ instrument: 'brass', name: 'Horns' }] };
+    expect(droppedLayers(raw, sanitize(raw)!)).toEqual({ overLimit: [], unknownInstrument: [] });
+  });
+
+  it('says nothing when nothing was dropped', () => {
+    expect(droppedNote(droppedLayers(STARTER, sanitize(STARTER)!))).toBe('');
   });
 });

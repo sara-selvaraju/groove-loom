@@ -55,6 +55,12 @@ describe('prompt split for caching', () => {
     expect(req.endsWith("Person's new request: add a flute")).toBe(true);
   });
 
+  it('says when the piece is full, and only then', () => {
+    const full = { ...piece, layers: Array.from({ length: 8 }, (_, i) => ({ ...piece.layers[0]!, id: `k${i}` })) };
+    expect(buildRequest('add piano', full, [])).toContain('already has 8 layers, the most it can hold');
+    expect(buildRequest('add piano', piece, [])).not.toContain('the most it can hold');
+  });
+
   it('joins back into the whole prompt', () => {
     expect(buildPrompt('x', piece, [])).toBe(`${INSTRUCTIONS}\n\n${buildRequest('x', piece, [])}`);
   });
