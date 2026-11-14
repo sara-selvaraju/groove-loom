@@ -9,6 +9,8 @@ void main(){ vec4 w = modelMatrix * vec4(position, 1.0); vW = w.xyz; gl_Position
 export const TAP_FS = `
 uniform sampler2D uTex; uniform float uRows; uniform float uFell; uniform float uScroll;
 uniform vec3 uPal[12]; uniform vec3 uBg; uniform vec3 uWarp; uniform vec3 uWarp2; uniform vec3 uCam;
+// The live bar: where the shuttle is (in warp columns), how many picks the bar takes, and whether it is playing.
+uniform float uPlayhead; uniform float uLivePicks; uniform float uPlaying;
 varying vec3 vW;
 const float PICK = 0.08; const float CELL = 0.1; const float COLS = 96.0;
 const vec3 LIGHT = vec3(-0.42, 0.5, 0.76);          // cloth-local: x right, y away from the weaver, z up
@@ -101,6 +103,12 @@ void main(){
         col *= sh; flatC *= sh;
       }
       if (ghost) { col = mix(col, uBg, 0.32); flatC = mix(flatC, uBg, 0.32); }
+      // A note just woven lights up as it is heard, then settles into the cloth.
+      if (fl && rowi < uLivePicks && uPlaying > 0.5) {
+        float pop = 1.0 - smoothstep(0.0, 14.0, uPlayhead - c);
+        col = mix(col, col * 1.3 + vec3(0.1), pop * 0.85);
+        flatC = mix(flatC, flatC * 1.3 + vec3(0.1), pop * 0.85);
+      }
     }
     col = mix(flatC, col, detail);
     // Selvedge: the outermost warps sit tighter and catch less light.
@@ -108,6 +116,13 @@ void main(){
     col *= mix(0.8, 1.0, smoothstep(0.0, 1.6, edge));
     // The reed's soft shadow on the cloth just behind the weaving edge.
     if (d > 0.0) col *= 1.0 - 0.14 * exp(-d * 0.6);
+  }
+  // A warm pool of light travels with the shuttle across the bar being woven.
+  if (uPlaying > 0.5) {
+    float dc = (c - uPlayhead) / 11.0;
+    float dd = (d - uLivePicks * 0.5) / max(uLivePicks, 8.0);
+    float glow = exp(-dc * dc - dd * dd * 1.6);
+    col = col * (1.0 + 0.28 * glow) + vec3(0.1, 0.06, 0.0) * glow;
   }
   col = mix(col, uBg, smoothstep(16.0, 36.0, distance(uCam, vW)) * 0.85);
   gl_FragColor = vec4(col, 1.0);

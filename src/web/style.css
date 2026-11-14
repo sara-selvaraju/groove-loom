@@ -645,6 +645,59 @@ input[type='range'] {
   border-radius: 16px;
 }
 
+/* ---------- The live bar ---------- */
+
+/* A layer's legend dot lights up while it sounds. */
+.legend span i {
+  transition: transform 90ms ease-out, box-shadow 90ms ease-out;
+}
+.legend span.sounding {
+  color: var(--ink);
+}
+.legend span.sounding i {
+  transform: scale(1.55);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--thread) 30%, transparent);
+}
+@media (prefers-reduced-motion: reduce) {
+  .legend span i {
+    transition: none;
+  }
+  .legend span.sounding i {
+    transform: none;
+  }
+}
+
+/* Play on the loom itself, for screens where the control strip is out of view. */
+.loom-play {
+  display: none;
+}
+@media (max-width: 959px) {
+  .loom-play {
+    position: absolute;
+    right: 12px;
+    bottom: 12px;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    border: 0;
+    background: var(--accent);
+    color: var(--accent-ink);
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    box-shadow: 0 8px 18px -6px rgba(29, 35, 64, 0.55);
+  }
+  .loom-play svg {
+    width: 22px;
+    height: 22px;
+    fill: currentColor;
+  }
+  .cloth-stat {
+    right: 74px;
+    bottom: 26px;
+  }
+}
+
 /* ---------- Footer ---------- */
 
 .foot {

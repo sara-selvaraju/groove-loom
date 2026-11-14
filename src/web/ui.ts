@@ -40,6 +40,7 @@ function renderLegend(): void {
   lg.textContent = '';
   state.piece.layers.forEach((L, i) => {
     const s = document.createElement('span');
+    s.style.setProperty('--thread', `var(${LAYER_VARS[i % 8]})`);
     const d = document.createElement('i');
     d.style.background = `var(${LAYER_VARS[i % 8]})`;
     s.append(d, L.name);
@@ -422,13 +423,16 @@ async function ask(input: string): Promise<void> {
 /* ---------- Wiring ---------- */
 
 function wire(): void {
-  $('play').onclick = () => {
+  // Two play buttons, one action: the one on the loom is for phones, where the control strip is out of view.
+  const togglePlay = () => {
     unlockAudio();
     mediaSession(!state.playing);
     void setPlaying(!state.playing).then(() => {
       if (state.playing) checkAudio();
     });
   };
+  $('play').onclick = togglePlay;
+  $('loomPlay').onclick = togglePlay;
 
   $('askForm').addEventListener('submit', (e) => {
     e.preventDefault();

@@ -88,6 +88,15 @@ Seen on real hardware with six layers, the redesigned cloth read as stripes rath
 - **Notes in full colour, everything else nearly undyed.** Between notes a layer's row is a faint tint of its colour (so the row can still be found); a muted layer is almost undyed. Notes are raised, a touch richer in colour, with more sheen and soft shadows on the cloth around them. The rhythm is now the pattern: four kicks and two snares per bar are visible at a glance.
 - **Start from bare warp.** Before anything is woven, the loom shows bare warp with only the first bar sketched faintly at the weaving edge, so pressing play grows the cloth from nothing.
 
+## The live bar
+
+The moment the music connects to the weave is the bar being woven, so it is marked:
+
+- A warm pool of light travels with the shuttle across the live bar.
+- Each note lights up as it is woven, which is the moment it is heard (the shuttle position is the audio clock), then settles into the cloth over about a sixteenth of a bar.
+- A layer's legend dot grows and glows while one of its notes sounds (no growth when reduced motion is set).
+- On phones and narrow screens a play button sits on the loom itself, because the control strip is below the conversation and out of view.
+
 ## Open questions
 
 - Where forkers are most likely to extend: visualisers, instrument packs, the AI's musical vocabulary, or all three. This decides where the extension points go.

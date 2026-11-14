@@ -74,6 +74,9 @@ export function createTapestry(host: HTMLCanvasElement, tagBox: HTMLElement, onF
     uWarp: { value: new Color() },
     uWarp2: { value: new Color() },
     uCam: { value: new Vector3() },
+    uPlayhead: { value: 0 },
+    uLivePicks: { value: 0 },
+    uPlaying: { value: 0 },
   };
   const bed = new Mesh(
     new PlaneGeometry(HALF * 2 + 1.6, 70),
@@ -198,7 +201,7 @@ export function createTapestry(host: HTMLCanvasElement, tagBox: HTMLElement, onF
   }
   // each layer's pick is woven two yarns deep so its colour reads as a band; ground picks are one yarn
   const depth = (pk: Pick) => (pk.g ? 1 : 2);
-  function build(): { picks: number; tags: { at: number; text: string }[]; newest: Row | null } {
+  function build(): { picks: number; livePicks: number; tags: { at: number; text: string }[]; newest: Row | null } {
     const { playing, curRow, rows, piece } = state;
     const parts: Part[] = [];
     if (playing && curRow) parts.push({ row: curRow, upto: Math.ceil(ph * COLS) });
@@ -215,7 +218,8 @@ export function createTapestry(host: HTMLCanvasElement, tagBox: HTMLElement, onF
       parts.push({ row: r, ghost: true, label: true });
     }
     for (const r of rows) parts.push({ row: r });
-    let p = 0;
+    let p = 0,
+      livePicks = 0;
     const tags: { at: number; text: string }[] = [];
     for (const part of parts) {
       const r = part.row;
@@ -223,12 +227,13 @@ export function createTapestry(host: HTMLCanvasElement, tagBox: HTMLElement, onF
       const list = pickList(r);
       for (let i = list.length - 1; i >= 0 && p < MAXP; i--)
         for (let k = 0; k < depth(list[i]!) && p < MAXP; k++, p++) writePick(p, r, list[i]!, i, part.upto ?? COLS, part.ghost, k);
+      if (part.upto != null && !livePicks) livePicks = p; // the live bar is written first
       if (r.tags.length && r.tags[0] !== 'first bar' && (!part.ghost || part.label)) tags.push({ at: p, text: r.tags.join('  ') });
       if (p >= MAXP) break;
     }
     data.fill(0, p * COLS * 4);
     tex.needsUpdate = true;
-    return { picks: p, tags, newest: parts[0]?.row || null };
+    return { picks: p, livePicks, tags, newest: parts[0]?.row || null };
   }
   function placeTags(tags: { at: number; text: string }[]): void {
     const w = host.clientWidth,
@@ -291,6 +296,9 @@ export function createTapestry(host: HTMLCanvasElement, tagBox: HTMLElement, onF
     if (Math.abs(scroll) < 0.01) scroll = 0;
     U.uFell.value = fz;
     U.uScroll.value = scroll;
+    U.uPlaying.value = playing ? 1 : 0;
+    U.uPlayhead.value = ph * COLS;
+    U.uLivePicks.value = playing ? b.livePicks : 0;
     U.uCam.value.copy(camera.position);
     const beat = Math.exp(-(now - beatAt) / 120); // the reed swings in to pack each new bar
     // From the cloth outwards, as on a real loom: the weaving edge, the shuttle's path, the reed.
