@@ -82,7 +82,7 @@ export function createTapestry(host: HTMLCanvasElement, tagBox: HTMLElement, onF
   bed.rotation.x = -Math.PI / 2;
   bed.position.z = -28;
   const frame = createLoomFrame(HALF);
-  const { reed, shuttle, beam } = frame;
+  const { reed, shuttle } = frame;
   // Light intensities are scaled by pi: three.js now uses physical light units, r128 did not.
   scene.add(bed, frame.group, new HemisphereLight(0xffffff, 0x3a3a3a, 0.6 * Math.PI));
   const sun = new DirectionalLight(0xfff4e6, 0.7 * Math.PI);
@@ -130,7 +130,7 @@ export function createTapestry(host: HTMLCanvasElement, tagBox: HTMLElement, onF
     zTop = rayZ(0.86);
     zBot = rayZ(-1);
     fellNear = zBot - 1.65; // room in front of the cloth for the shuttle's path and the reed
-    beam.position.set(0, 0.05, zBot - 0.2);
+    frame.setFront(zBot - 0.2);
     return true;
   }
   function applyTheme(): void {

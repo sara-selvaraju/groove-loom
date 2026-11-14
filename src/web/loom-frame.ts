@@ -69,6 +69,8 @@ function grainTexture(): Texture {
 
 export interface LoomFrame {
   group: Group;
+  /** Places the front beam at z and runs the side rails from it into the distance, so they always meet. */
+  setFront(z: number): void;
   reed: Group;
   shuttle: Group;
   beam: Mesh;
@@ -92,9 +94,12 @@ export function createLoomFrame(half: number): LoomFrame {
 
   const RAIL_X = half + 0.42,
     RAIL_LEN = 60;
+  const rails: Mesh[] = [];
   for (const side of [-1, 1]) {
-    const rail = new Mesh(new BoxGeometry(0.36, 0.26, RAIL_LEN), railWood);
-    rail.position.set(side * RAIL_X, 0.13, 1.5 - RAIL_LEN / 2);
+    // Level with the top of the front beam, so the frame reads as one piece.
+    const rail = new Mesh(new BoxGeometry(0.36, 0.3, RAIL_LEN), railWood);
+    rail.position.set(side * RAIL_X, 0.22, 1.5 - RAIL_LEN / 2);
+    rails.push(rail);
     group.add(rail);
   }
 
@@ -147,6 +152,10 @@ export function createLoomFrame(half: number): LoomFrame {
 
   return {
     group,
+    setFront(z: number) {
+      beam.position.set(0, 0.05, z);
+      for (const rail of rails) rail.position.z = z - RAIL_LEN / 2;
+    },
     reed,
     shuttle,
     beam,

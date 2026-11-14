@@ -42,7 +42,12 @@ void main(){
   float detail = 1.0 - smoothstep(0.22, 0.7, fw);
   vec3 gap = uBg * 0.5;
   vec3 col; vec3 flatC;
-  if (c < 0.0 || c >= COLS) { col = uBg; flatC = uBg; }
+  if (c < 0.0 || c >= COLS) {
+    // The floor beneath the loom, in the frame's shade, darkest right beside the cloth.
+    float beyond = c < 0.0 ? -c : c - COLS;
+    col = uBg * mix(0.62, 0.78, smoothstep(0.0, 4.0, beyond));
+    flatC = col;
+  }
   else {
     float ci = floor(c), fx = fract(c);
     float wa = (fx - 0.5) / 0.36;
