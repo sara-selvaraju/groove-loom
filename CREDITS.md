@@ -44,6 +44,10 @@ The app shows this attribution under the code panel. Keep it visible in any fork
 
 ## Code
 
-- Strudel (`@strudel/web` 1.3.0), AGPL-3.0. The files `prototype/superdough-processors.js`, `prototype/dough-processor.js`, `prototype/recorder.js` and `prototype/sample-generator.js` are Strudel's own audio worklets, extracted unchanged from that bundle.
-- three.js r128, MIT.
-- lamejs 1.2.1, LGPL-3.0.
+- Strudel (`@strudel/web` 1.3.0), AGPL-3.0. Its audio worklets are extracted unchanged from the installed package into `public/worklets/` at install time (`scripts/extract-worklets.mjs`). The prototype's copies are `prototype/superdough-processors.js`, `prototype/dough-processor.js`, `prototype/recorder.js` and `prototype/sample-generator.js`.
+- three.js (r187 in the app, r128 in the prototype), MIT.
+- lamejs, LGPL-3.0: `@breezystack/lamejs` 1.2.7 in the app (an ES module build of lamejs), lamejs 1.2.1 in the prototype.
+
+## Font
+
+- Recursive by Arrow Type, [SIL Open Font License 1.1](https://openfontlicense.org), bundled from `@fontsource-variable/recursive`.
