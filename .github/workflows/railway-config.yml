@@ -17,6 +17,8 @@ concurrency:
   group: railway-config-staging
   cancel-in-progress: false
 
+# The project token is scoped to staging, so the CLI needs no --environment
+# (naming one makes the CLI look it up, which a project token cannot do).
 env:
   RAILWAY_CLI_VERSION: 5.74.0
 
@@ -46,7 +48,7 @@ jobs:
       - name: Plan
         run: |
           set -o pipefail
-          railway config plan --environment staging --verbose | tee plan.txt
+          railway config plan --verbose | tee plan.txt
           {
             echo '### Railway plan for staging'
             echo '```'
@@ -78,4 +80,4 @@ jobs:
       # No --confirm-destructive: a change that would delete something fails
       # here and has to be applied by hand after a look.
       - name: Apply
-        run: railway config apply --environment staging --yes
+        run: railway config apply --yes

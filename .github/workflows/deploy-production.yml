@@ -47,6 +47,8 @@ jobs:
     timeout-minutes: 20
     # Required reviewers on this environment are the approval gate. The
     # Railway token is an environment secret, released only after approval.
+    # It is a project token scoped to production, so the Railway commands
+    # below target production without an --environment flag.
     environment:
       name: production
       url: ${{ vars.PRODUCTION_URL }}
@@ -79,10 +81,10 @@ jobs:
       # something stops the release.
       - name: Apply Railway config
         run: |
-          railway config plan --environment production --verbose
-          railway config apply --environment production --yes
+          railway config plan --verbose
+          railway config apply --yes
       - name: Deploy to Railway
-        run: railway up --ci --service "$RAILWAY_SERVICE" --environment production
+        run: railway up --ci --service "$RAILWAY_SERVICE"
       - name: Wait for the new version to go live
         run: |
           expected="${GITHUB_REF_NAME#v}"
