@@ -188,6 +188,14 @@ function renderLayers(): void {
         L.space = v;
         soft();
       }, `s-${L.id}`),
+      slider('Echo', L.echo, 0, 1, 0.01, (v) => (v < 0.03 ? 'off' : pct(v)), (v) => {
+        L.echo = v;
+        soft();
+      }, `e-${L.id}`),
+      slider('Grit', L.grit, 0, 1, 0.01, (v) => (v < 0.03 ? 'clean' : v < 0.45 ? 'warm' : 'dirty'), (v) => {
+        L.grit = v;
+        soft();
+      }, `g-${L.id}`),
     );
     if (L.rhythm?.mode === 'euclid') {
       const R = L.rhythm;
@@ -232,10 +240,15 @@ function renderPatTexts(): void {
 function fillDraft(box: HTMLDivElement, L: Layer, i: number): void {
   const steps = L.rhythm?.mode === 'euclid' ? L.rhythm.steps : 16;
   const on = new Array<boolean>(steps).fill(false);
+  const level = new Array<number>(steps).fill(1);
   try {
     for (const h of state.compiled?.perLayer[i]?.queryArc(0, 1) ?? []) {
       const at = Math.floor(h.part.begin.valueOf() * steps + 1e-6);
-      if (at >= 0 && at < steps) on[at] = true;
+      if (at >= 0 && at < steps) {
+        on[at] = true;
+        const v = (h.value as { velocity?: unknown } | null)?.velocity;
+        if (typeof v === 'number') level[at] = Math.min(1, Math.max(0, v));
+      }
     }
   } catch {
     // a pattern that cannot be queried draws as empty
@@ -245,7 +258,11 @@ function fillDraft(box: HTMLDivElement, L: Layer, i: number): void {
   const beat = steps % 4 === 0 ? steps / 4 : 0;
   on.forEach((hit, k) => {
     const cell = document.createElement('i');
-    if (hit) cell.className = 'on';
+    if (hit) {
+      cell.className = 'on';
+      // Softer hits are drawn paler, so accents show.
+      if (level[k]! < 0.98) cell.style.opacity = String(0.3 + 0.7 * level[k]!);
+    }
     if (beat && k % beat === 0) cell.classList.add('beat');
     box.append(cell);
   });

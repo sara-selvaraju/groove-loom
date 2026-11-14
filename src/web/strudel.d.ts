@@ -29,6 +29,7 @@ declare module '@strudel/web' {
   export function samples(map: Record<string, unknown>, baseUrl?: string): Promise<unknown>;
   export function loadBuffer(url: string, ctx: AudioContext, sound?: string): Promise<AudioBuffer>;
   export function getAudioContext(): AudioContext;
+  export function loadWorklets(): Promise<unknown>;
   export function getSuperdoughAudioController(): { output: SuperdoughOutput };
   export function mini(source: string): Pattern;
   export function noteToMidi(note: string): number;

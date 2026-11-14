@@ -36,9 +36,9 @@ function applyCalls({ head, calls }: LayerCalls, swing: [number, number] | null)
 export function compile(p: Piece): Compiled {
   const sw = swingArgs(p),
     on = audible(p);
-  const perLayer = p.layers.map((L) => {
+  const perLayer = p.layers.map((L, i) => {
     try {
-      return applyCalls(layerCalls(L, p), sw);
+      return applyCalls(layerCalls(L, p, i), sw);
     } catch (e) {
       console.warn('layer failed', L.id, e);
       return null;

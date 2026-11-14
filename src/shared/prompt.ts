@@ -21,7 +21,7 @@ Reply with ONLY one JSON object: {"reply": string, "piece": Piece}.
 
 Piece = {"tempo": 60-180 (bpm), "key": one of ${JSON.stringify(KEYS)}, "scale": one of ${JSON.stringify(Object.keys(SCALES))}, "swing": 0-1 (0 straight, 0.5 swung, 1 heavy shuffle), "layers": Layer[] (at most ${MAX_LAYERS})}
 
-Layer = {"id": short slug, keep existing ids for layers you keep, "name": 1-3 words shown to the person, "instrument": one of [${instrumentList()}], "notes": pitched instruments only, "rhythm": Rhythm or omitted, "volume": 0-1, "tone": 0-1 (0.5 natural, lower is darker and muffled, higher is brighter), "space": 0-1 (reverb), "octave": -2..2 shift (optional), "muted": boolean, "about": one short plain sentence on what this layer does}
+Layer = {"id": short slug, keep existing ids for layers you keep, "name": 1-3 words shown to the person, "instrument": one of [${instrumentList()}], "notes": pitched instruments only, "rhythm": Rhythm or omitted, "volume": 0-1, "tone": 0-1 (0.5 natural, lower is darker and muffled, higher is brighter), "space": 0-1 (reverb), "echo": 0-1 (echo repeats, timed to the beat; 0 for none), "grit": 0-1 (0 clean, around 0.3 warm saturation, higher is distorted), "accent": louder and softer hits as numbers 0-1 in the same notation as notes, lining up with the hits (e.g. "[1 .55]*4" strong then soft, "1 .6 .8 .6" a stress on beat one), or null for even hits, "octave": -2..2 shift (optional), "muted": boolean, "about": one short plain sentence on what this layer does}
 
 Rhythm is one of:
 - {"mode": "euclid", "hits": h, "steps": n, "rotate": r}: h hits spread evenly over n steps of one bar (n up to 32), rotated r steps. Use this whenever it fits; it is the clearest shape.
@@ -30,7 +30,7 @@ Drums must have a rhythm. For pitched layers the rhythm is optional: with a rhyt
 
 "notes" uses scale degrees, not note names: 0 is the key's root, 1 the next scale step, 7 the root an octave up, -1 below the root. Spaces split the bar evenly, ~ is a rest, [0 2] squeezes two notes into one step, <0 3 4> picks a different one each bar (good for chord changes), [0,2,4] is a chord (stack with commas). Only digits, spaces, minus and the symbols ~ [ ] < > , * are allowed.
 
-Keep everything the person did not ask to change. Respect their mutes and knob settings unless they ask otherwise. Keep it musical: bass usually octave 0 with roots, pads slow and quiet, leads not too busy. Prefer the recorded instruments; use the synth ones when the person asks for an electronic, retro or synthy sound.`;
+Keep everything the person did not ask to change. Respect their mutes and knob settings unless they ask otherwise. Keep it musical: bass usually octave 0 with roots, pads slow and quiet, leads not too busy. Use echo, grit and accents when they suit the request (dub and spacey sounds like echo; rock and lo-fi like grit; accents make drums feel played), and leave them at 0 or null otherwise. Prefer the recorded instruments; use the synth ones when the person asks for an electronic, retro or synthy sound.`;
 
 /** The per-request part: the current piece, the recent conversation and the new request. */
 export function buildRequest(request: string, piece: Piece, history: ChatMessage[]): string {

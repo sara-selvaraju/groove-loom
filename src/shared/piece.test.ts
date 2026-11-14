@@ -48,7 +48,7 @@ describe('sanitizePiece: shape', () => {
     })!;
     expect(Object.keys(out).sort()).toEqual(['key', 'layers', 'scale', 'swing', 'tempo']);
     expect(Object.keys(out.layers[0]!).sort()).toEqual(
-      ['about', 'id', 'instrument', 'muted', 'name', 'notes', 'octave', 'rhythm', 'solo', 'space', 'tone', 'volume'].sort(),
+      ['about', 'accent', 'echo', 'grit', 'id', 'instrument', 'muted', 'name', 'notes', 'octave', 'rhythm', 'solo', 'space', 'tone', 'volume'].sort(),
     );
   });
 
@@ -287,5 +287,30 @@ describe('droppedLayers and droppedNote', () => {
 
   it('says nothing when nothing was dropped', () => {
     expect(droppedNote(droppedLayers(STARTER, sanitize(STARTER)!))).toBe('');
+  });
+});
+
+describe('sanitizePiece: echo, grit and accents', () => {
+  it('clamps echo and grit to 0..1 and defaults them to 0', () => {
+    expect(one({ instrument: 'kick', echo: 3, grit: -1 })).toMatchObject({ echo: 1, grit: 0 });
+    expect(one({ instrument: 'kick' })).toMatchObject({ echo: 0, grit: 0, accent: null });
+    expect(one({ instrument: 'kick', echo: null, grit: 'loud' })).toMatchObject({ echo: 0, grit: 0 });
+  });
+
+  it.each(['1 .6', '[1 .55]*4', '<1 .8> .5', '[.66 [.99 | .91 | .84]]*2', '1 .6 .8 .6', '0.5!3 1'])('accepts accent %j', (accent) => {
+    expect(one({ instrument: 'kick', accent })!.accent).toBe(accent);
+  });
+
+  it.each([
+    ['a level above 1', '1 2'],
+    ['a level above 1 as a decimal', '1.5 .5'],
+    ['letters', 'loud soft'],
+    ['script', '<script>alert(1)</script>'],
+    ['a JavaScript call', '1 .5).fast(2'],
+    ['unbalanced brackets', '[1 .5'],
+    ['too long', '1 '.repeat(70)],
+    ['not a string', 0.5],
+  ])('rejects an accent with %s', (_why, accent) => {
+    expect(one({ instrument: 'kick', accent })!.accent).toBeNull();
   });
 });

@@ -55,6 +55,18 @@ ready
     $('recNote').textContent = 'Audio engine failed to load in this view.';
   });
 
+// Strudel loads its audio processors (used by grit and other effects) only once audio has started, so
+// the first note needing one would be dropped. Load them as soon as the engine is ready, once.
+let worklets: Promise<void> | null = null;
+export function effectsReady(): Promise<void> {
+  worklets ??= ready.then(() => S.loadWorklets()).then(
+    () => undefined,
+    (e) => console.warn('audio effects not loaded', e),
+  );
+  return worklets;
+}
+void effectsReady();
+
 /** The un-limited output, for recording if the limiter could not be added. */
 export const rawOutput = (): AudioNode => S.getSuperdoughAudioController().output.destinationGain;
 export const audioContext = (): AudioContext => S.getAudioContext();
