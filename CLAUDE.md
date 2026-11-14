@@ -2,9 +2,11 @@
 
 ## What this is
 
-A music toy for people who are not musicians. A person describes music in plain words ("start me off with a 4/4 beat", "throw in a syncopated trumpet"), Claude turns each request into a layer, and knobs shape the result. While it plays, a loom weaves the music into a tapestry: one coloured thread per layer, raised wherever that layer sounds.
+**North star.** One ask: "Help me say what I hear." One outcome: someone arrives describing music in their own words, and leaves able to ask for it in music's words. Every feature is judged by one test: does it help someone gain a word or a pattern they can use next time?
 
-The purpose is exploration with a side of teaching: helping people notice the language, shape and mathematical patterns of music. The Strudel code is hidden by default, with an "under the hood" panel for anyone who wants to learn what it is doing.
+**Audience: students and explorers of music.** People who want to create at the level of instruments, rhythm and melody but don't yet have the language to ask for what they hear.
+
+A person describes music in plain words ("start me off with a 4/4 beat", "throw in a syncopated trumpet"), Claude turns each request into a layer, and knobs shape the result. Each reply links the person's words to music terms and the app lists exactly what changed. While it plays, a loom weaves the music into a tapestry: one coloured thread per layer, raised wherever that layer sounds, so patterns heard become patterns seen. The Strudel code is hidden by default, with an "under the hood" panel for anyone who wants to learn what it is doing.
 
 The repo is meant to be forked. Licence is AGPL-3.0 to match Strudel.
 
@@ -102,5 +104,5 @@ Decided:
 - UI copy and docs use Australian English.
 - No em dashes in UI copy or docs.
 - Docs use role-based phrasing ("the request is validated against the whitelist") rather than personal pronouns.
-- UI copy names things the way a non-musician would recognise them; any music term is explained in the same breath.
+- UI copy names things the way someone new to music would recognise them; any music term is explained in the same breath.
 - Keep the sample credits visible in the UI.

@@ -1,12 +1,22 @@
 # Groove Loom
 
-Describe music in plain words and hear it come together, one layer at a time. As it plays, a loom weaves the music into a tapestry you can read.
+**Help me say what I hear.**
+
+Groove Loom is for students and explorers of music: people who want to create with instruments, rhythm and melody, but don't yet have the words to ask for what they hear. You arrive describing music in your own words, and leave able to ask for it in music's words.
 
 ![Groove Loom: a 3D loom weaving coloured threads for kick, snare, hi-hats and bass, with a chat panel alongside and playback controls below](docs/screenshot.webp)
 
-Groove Loom is for people who love music but have never learnt its language. Type "start me off with a 4/4 beat", "throw in a syncopated trumpet" or "make it groovier". Each request becomes a layer, and the reply explains what changed in plain words, pointing out the shape and maths where it helps ("3 hits spread as evenly as possible over 8 steps"). Knobs shape each layer: volume, tone, space, echo and grit.
+## How it teaches
 
-The tapestry is the music written down. Each layer is a coloured thread, raised wherever that layer sounds, and each bar is a band, with the newest at the front. Patterns you hear become patterns you can see.
+Type what you hear in your head: "start me off with a beat", "make it bouncier", "something sad on top". Each request becomes a layer you hear straight away, and every reply teaches a little:
+
+- **Your words, matched to music's words.** "groovier" → **swing**: every second note lands a little late, so the beat bounces. Next time, you can ask for swing.
+- **Exactly what changed.** "Tempo 100 → 110 beats a minute, faster", "+ Trumpet", "Hi-hats: some hits louder than others". The app works this out itself, so it is always accurate.
+- **The shape and maths of a pattern.** "3 hits spread as evenly as possible over 8 steps."
+- **Patterns you can see.** As the music plays, a loom weaves it into a tapestry. Each layer is a coloured thread, raised wherever that layer sounds, and each bar is a band. Patterns you hear become patterns you can see.
+- **Hands on.** Knobs shape each layer (volume, tone, space, echo, grit), and rhythm knobs show how hits, steps and rotation build a beat. An "under the hood" panel shows the code that makes the sound, for anyone who wants to go further.
+
+Every feature is held to one test: does it help someone gain a word or a pattern they can use next time?
 
 **Status:** in testing. The AI runs on the server behind a shared invite code. Everything else (playback, knobs, the tapestry, MP3 export) works without it.
 
@@ -73,7 +83,7 @@ Unit tests sit beside the code they test (`*.test.ts`).
 
 ## Making it your own
 
-The repo is meant to be forked. Common starting points:
+The repo is meant to be forked, for another kind of music, another language or another way of seeing sound. Common starting points:
 
 - **Add an instrument:** add an entry to `INSTR` in `src/shared/vocabulary.ts` and put its samples in `public/sounds/`. The AI learns about it automatically, because its instructions are built from that table. Credit the samples in `CREDITS.md`.
 - **Change how the AI talks:** edit `INSTRUCTIONS` in `src/shared/prompt.ts`. If you add a field to the piece, add it to `compose-schema.ts`, `sanitizePiece` and the compiler too.

@@ -2,6 +2,10 @@
 
 Thanks for helping. This guide covers how a change gets in and the few rules that keep the project coherent. Setup and commands are in the [README](README.md).
 
+## Before you start
+
+Groove Loom has one aim: someone arrives describing music in their own words, and leaves able to ask for it in music's words. A change earns its place when it helps someone gain a word or a pattern they can use next time. Polish that doesn't serve that aim can wait.
+
 ## Making a change
 
 1. Branch from `main`. Keep a pull request to one idea.
