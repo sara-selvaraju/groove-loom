@@ -184,6 +184,26 @@ The server limits each visitor to 10 AI requests a minute and 100 a day, and eac
 
 A tag ruleset targeting `v*` that restricts creation to admins stops anyone else starting a production release.
 
+### Custom domain
+
+Production is served at `https://www.groove-loom.com`. The domain is registered and its DNS hosted at GoDaddy.
+
+GoDaddy cannot point a bare domain (`groove-loom.com`) at another host's name, so `www` is the real address and GoDaddy forwards the bare domain to it.
+
+1. **Railway** → production environment → the service → **Settings** → **Networking** → **Custom Domain**: add `www.groove-loom.com` on the same port as the service's `.up.railway.app` domain (8080). Railway shows two records to add.
+2. **GoDaddy** → the domain → **DNS**:
+   - Edit the `www` **CNAME** so its value is the target Railway shows (ending in `.up.railway.app`).
+   - Add a **TXT** record named `_railway-verify.www` with the value Railway shows. GoDaddy adds the domain to the name itself.
+3. **GoDaddy** → the domain → **Forwarding**: forward `groove-loom.com` to `https://www.groove-loom.com`, **Permanent (301)**, without masking. Masking puts the site in a frame, which the Content Security Policy blocks.
+
+**Check:** Railway shows green ticks beside both records and issues the certificate itself. `curl -s https://www.groove-loom.com/healthz` reports the version, and `curl -s -o /dev/null -w "%{redirect_url}" https://groove-loom.com` prints `https://www.groove-loom.com/`.
+
+Things to know:
+
+- A browser can show `ERR_SSL_PROTOCOL_ERROR` for up to an hour after the change, until caches drop the old `www` record (the old record's TTL). It clears by itself; `ipconfig /flushdns` and the browser's host cache only clear the computer, not the router or the internet provider.
+- GoDaddy's forwarding keeps only the bare address: a path or a `?query` on `groove-loom.com` is dropped or answered with a 404. A `#fragment` survives the redirect, because browsers carry it over, so share links keep the piece after `#`.
+- The `.up.railway.app` address keeps working, and the release workflow checks `/healthz` there (`PRODUCTION_URL`).
+
 ## First run
 
 1. **Merge the pipeline pull request.** CI runs on the merge commit, then Railway deploys staging. Watch it under the service's **Deployments** in `staging`.

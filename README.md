@@ -18,7 +18,7 @@ Type what you hear in your head: "start me off with a beat", "make it bouncier",
 
 Every feature is held to one test: does it help someone gain a word or a pattern they can use next time?
 
-**Status:** in testing. The AI runs on the server behind a shared invite code. Everything else (playback, knobs, the tapestry, MP3 export) works without it.
+**Status:** in testing at [www.groove-loom.com](https://www.groove-loom.com). The AI runs on the server behind a shared invite code for testers. Everything else (playback, knobs, the tapestry, MP3 export) works without it.
 
 ## Try it locally
 
