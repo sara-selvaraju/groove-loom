@@ -2,7 +2,7 @@
 
 ## Samples
 
-All samples live in `prototype/sounds/`.
+The app serves its samples from `public/sounds/`; the prototype has the same files in `prototype/sounds/`.
 
 ### Drums: `sounds/drums/`
 

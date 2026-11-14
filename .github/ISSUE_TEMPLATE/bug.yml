@@ -1,0 +1,21 @@
+name: Something isn't working
+description: A sound, the loom, the AI or a control behaves wrongly
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what happened instead. For an AI request, include what you typed.
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Device and browser
+      placeholder: e.g. iPhone 15, Safari; Windows laptop, Chrome
+  - type: textarea
+    id: extra
+    attributes:
+      label: Screenshot or recording
+      description: Optional. Drag a file in here.
