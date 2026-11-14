@@ -4,6 +4,7 @@ import { codeFor, audible, patternText } from '../shared/compiler.js';
 import { describeChanges, sanitizeChanges, sanitizeWords, type Word } from '../shared/learning.js';
 import { BLANK, STARTER, cleanText, sanitizePiece, type Layer } from '../shared/piece.js';
 import type { ChatMessage } from '../shared/prompt.js';
+import { decodeLink, encodePiece, isShareLink } from '../shared/share.js';
 import { INSTR, KEYS, MAX_LAYERS, SCALES } from '../shared/vocabulary.js';
 import { checkAudio, mediaSession, preload, setVolume, unlockAudio, withSounds } from './audio.js';
 import { drawCloth, initCloth } from './cloth.js';
@@ -392,6 +393,52 @@ function snapshot(): void {
   $<HTMLButtonElement>('undo').disabled = false;
 }
 
+/* ---------- Share links ---------- */
+
+/** Copies a link to the piece (or opens the phone's share sheet). The link carries the piece only, never the chat. */
+async function sharePiece(): Promise<void> {
+  const btn = $<HTMLButtonElement>('share');
+  const url = location.origin + location.pathname + (await encodePiece(state.piece));
+  if (typeof navigator.share === 'function' && matchMedia('(pointer: coarse)').matches) {
+    try {
+      await navigator.share({ title: 'Groove Loom', text: 'Have a listen to what I made on Groove Loom.', url });
+      return;
+    } catch (e) {
+      if (e instanceof DOMException && e.name === 'AbortError') return;
+      // fall through to copying
+    }
+  }
+  try {
+    await navigator.clipboard.writeText(url);
+    btn.textContent = 'Link copied';
+    window.setTimeout(() => (btn.textContent = 'Share link'), 2000);
+  } catch {
+    window.prompt('Copy this link to share your piece:', url);
+  }
+}
+
+/**
+ * Opens a piece from a share link in the address. The link's data is checked
+ * by sanitizePiece like an AI reply; the current piece is kept for Undo.
+ */
+async function openShareLink(): Promise<void> {
+  const hash = location.hash;
+  if (!isShareLink(hash)) return;
+  // Clear it, so a reload or a later share starts from the person's own piece.
+  history.replaceState(null, '', location.pathname + location.search);
+  const next = sanitizePiece(await decodeLink(hash), null, parsesAsMini);
+  if (!next) {
+    state.log.push({ who: 'loom', err: true, text: "That shared link is damaged or incomplete, so nothing changed. Ask whoever sent it for a fresh one." });
+  } else {
+    snapshot();
+    state.piece = next;
+    state.log.push({ who: 'loom', text: 'This piece came from a shared link. Press play to hear it, then change anything you like. Undo brings back the piece you had.' });
+    update();
+  }
+  renderLog();
+  save();
+}
+
 /* ---------- Ask the AI ---------- */
 
 let ctl: AbortController | null = null;
@@ -632,6 +679,9 @@ function wire(): void {
     void record();
   };
   $('saveCloth').onclick = () => void saveCloth();
+  $('share').onclick = () => void sharePiece();
+  // a link pasted into the address bar of an open page changes only the fragment
+  window.addEventListener('hashchange', () => void openShareLink());
 }
 
 export function boot(): void {
@@ -641,6 +691,7 @@ export function boot(): void {
   initCloth();
   update();
   renderLog();
+  void openShareLink();
   void aiAvailable().then((on) => {
     composer = on ? new ServerComposer(currentInvite) : null;
     renderAiNote();

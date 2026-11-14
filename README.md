@@ -15,6 +15,7 @@ Type what you hear in your head: "start me off with a beat", "make it bouncier",
 - **Exactly what changed.** "Tempo 100 → 110 beats a minute, faster", "+ Trumpet", "Hi-hats: some hits louder than others". The app works this out itself, so it is always accurate.
 - **The shape and maths of a pattern.** "3 hits spread as evenly as possible over 8 steps."
 - **Patterns you can see.** As the music plays, a loom weaves it into a tapestry. Each layer is a coloured thread, raised wherever that layer sounds, and each bar is a band. Patterns you hear become patterns you can see.
+- **Share it.** Share link copies a link to your piece, so someone else can hear it, see how it's woven and change it. The link carries the piece only, never your chat.
 - **Hands on.** Knobs shape each layer (volume, tone, space, echo, grit), and rhythm knobs show how hits, steps and rotation build a beat. An "under the hood" panel shows the code that makes the sound, for anyone who wants to go further.
 
 Every feature is held to one test: does it help someone gain a word or a pattern they can use next time?
