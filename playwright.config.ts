@@ -13,7 +13,19 @@ export default defineConfig({
   use: {
     baseURL: `http://localhost:${port}`,
   },
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+  projects: [
+    {
+      name: 'chromium',
+      use: {
+        ...devices['Desktop Chrome'],
+        launchOptions: {
+          // Software WebGL so the tapestry renders on CI machines without a GPU,
+          // and audio that may start without a real person's tap.
+          args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--autoplay-policy=no-user-gesture-required'],
+        },
+      },
+    },
+  ],
   webServer: {
     command: 'npm start',
     url: `http://localhost:${port}/healthz`,

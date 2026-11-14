@@ -2,18 +2,86 @@
 <html lang="en-AU">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
     <title>Groove Loom</title>
     <meta name="description" content="Describe music in plain words and watch a loom weave it into a tapestry." />
-    <link rel="stylesheet" href="./style.css" />
   </head>
   <body>
-    <main>
-      <h1>Groove Loom</h1>
-      <p>Describe music in plain words and watch a loom weave it into a tapestry.</p>
-      <p class="note">The app is being moved here from the prototype. For now this page only checks that the pipeline works.</p>
-      <p class="status" id="status" data-state="checking">Checking the server…</p>
-    </main>
+<div class="wrap">
+  <header class="top">
+    <h1 class="brand">Groove<span>Loom</span></h1>
+    <p class="tag">Describe music in plain words. Watch its shape.</p>
+  </header>
+
+  <div class="grid">
+    <div class="left stack">
+      <section class="panel" aria-label="Your cloth and transport">
+        <div class="cloth-head"><span class="label">Your cloth</span><span class="note num" id="clothStat">0 bars woven</span></div>
+        <div class="cloth-box">
+          <canvas id="cloth" role="img" aria-label="Woven cloth: each band is one bar, each coloured thread is a layer, and the thread shows on the surface wherever that layer plays"></canvas>
+          <canvas id="tapestry" hidden role="img" aria-label="Tapestry on a loom: each band is one bar, each coloured thread is a layer, and the thread rises to the surface wherever that layer plays"></canvas>
+          <div class="tap-tags" id="tapTags" aria-hidden="true"></div>
+          <div class="cloth-hint" id="clothHint">Preview. Press play to start weaving.</div>
+        </div>
+        <div class="legend" id="legend"></div>
+
+        <div class="transport">
+          <button class="play" id="play" aria-label="Play">
+            <svg viewBox="0 0 24 24" id="playIcon"><path d="M7 4.5v15l13-7.5z"/></svg>
+          </button>
+          <div class="ctl">
+            <div class="ctl-row"><label for="tempo"><b>Tempo</b></label><output id="tempoOut" class="num">100 bpm</output></div>
+            <input type="range" id="tempo" min="60" max="180" step="1" value="100">
+          </div>
+          <div class="ctl">
+            <div class="ctl-row"><label for="swing"><b>Swing</b></label><output id="swingOut" class="num">straight</output></div>
+            <input type="range" id="swing" min="0" max="1" step="0.01" value="0">
+          </div>
+          <div class="keyrow">
+            <div class="ctl"><label class="label" for="key">Key</label><select id="key"></select></div>
+            <div class="ctl"><label class="label" for="scale">Scale</label><select id="scale"></select></div>
+            <div class="ctl"><label class="label" for="bars">Record</label>
+              <select id="bars"><option value="4">4 bars</option><option value="8" selected>8 bars</option><option value="16">16 bars</option></select></div>
+          </div>
+        </div>
+        <div class="tools">
+          <button class="btn" id="undo" disabled>Undo</button>
+          <button class="btn" id="reset">Start over</button>
+          <button class="btn" id="record">Make MP3</button>
+          <button class="btn" id="saveCloth">Save cloth</button>
+        </div>
+        <p class="note rec-note" id="recNote"></p>
+      </section>
+    </div>
+
+    <div class="stack">
+      <section class="panel ask" aria-label="Describe your music">
+        <div class="label">Tell the loom what you want</div>
+        <div class="log" id="log" aria-live="polite"></div>
+        <form class="ask-row" id="askForm">
+          <textarea id="prompt" rows="2" placeholder="e.g. throw in a syncopated trumpet"></textarea>
+          <button class="btn primary" id="send" type="submit">Send</button>
+        </form>
+        <div class="chips" id="chips"></div>
+        <p class="note" id="aiNote"></p>
+      </section>
+
+      <section class="panel" aria-label="Layers">
+        <div class="ctl-row layers-head"><span class="label">Layers</span><span class="note" id="layerCount"></span></div>
+        <div class="layers" id="layers"></div>
+      </section>
+
+      <section class="panel">
+        <details class="code" id="codeBox">
+          <summary>Under the hood: the Strudel code</summary>
+          <p class="note code-note">The loom never runs code from the AI. The AI returns a description of the layers, the app checks it, and builds this pattern from it. This listing is generated from the same description, so it always matches what you hear.</p>
+          <pre class="code mono" id="code"></pre>
+        </details>
+      </section>
+      <p class="note credits">Sounds: drums from the <a href="https://github.com/sgossner/VCSL" target="_blank" rel="noopener">Versilian Community Sample Library</a> (CC0). Instruments from Fluid R3 GM by Frank Wen, via <a href="https://github.com/gleitz/midi-js-soundfonts" target="_blank" rel="noopener">midi-js-soundfonts</a> (<a href="https://creativecommons.org/licenses/by/3.0/" target="_blank" rel="noopener">CC BY 3.0</a>). Audio engine: <a href="https://strudel.cc" target="_blank" rel="noopener">Strudel</a> (AGPL-3.0).</p>
+    </div>
+  </div>
+</div>
     <script type="module" src="./main.ts"></script>
   </body>
 </html>

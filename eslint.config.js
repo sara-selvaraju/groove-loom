@@ -3,9 +3,14 @@ import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
-  { ignores: ['dist/', 'prototype/', 'playwright-report/', 'test-results/'] },
+  { ignores: ['dist/', 'prototype/', 'public/', 'playwright-report/', 'test-results/'] },
   js.configs.recommended,
   ...tseslint.configs.recommended,
+  {
+    rules: {
+      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+    },
+  },
   {
     files: ['src/web/**/*.ts'],
     languageOptions: { globals: globals.browser },
