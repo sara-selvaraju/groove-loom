@@ -28,6 +28,8 @@ jobs:
           node-version-file: .node-version
           cache: npm
       - run: npm ci
+      # Fails on a known high or critical vulnerability in anything the app ships or the server runs.
+      - run: npm audit --omit=dev --audit-level=high
       - run: npm run lint
       - run: npm run typecheck
       - run: npm test

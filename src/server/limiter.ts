@@ -11,6 +11,12 @@ export interface Limits {
 
 export const DEFAULT_LIMITS: Limits = { perMinute: 10, perDay: 100, globalPerDay: 1000 };
 
+/**
+ * Wrong invite codes allowed per visitor. No limit across visitors: one person
+ * guessing must not lock every tester out.
+ */
+export const INVITE_GUESS_LIMITS: Limits = { perMinute: 5, perDay: 20, globalPerDay: Infinity };
+
 export type LimitResult = { ok: true } | { ok: false; scope: 'minute' | 'day' | 'global'; retryAfterSeconds: number };
 
 const MINUTE = 60_000;
@@ -37,6 +43,19 @@ export class Limiter {
   /** Counts the request if it is within every limit. */
   take(client: string): LimitResult {
     const t = this.now();
+    const result = this.check(client, t);
+    if (!result.ok) return result;
+    const window = this.recent.get(client) ?? [];
+    window.push(t);
+    this.recent.set(client, window);
+    this.daily.set(client, (this.daily.get(client) ?? 0) + 1);
+    this.globalCount += 1;
+    if (this.recent.size > 10_000) this.prune(t);
+    return { ok: true };
+  }
+
+  /** Whether a request would be within every limit, without counting it. */
+  check(client: string, t: number = this.now()): LimitResult {
     const today = utcDay(t);
     if (today !== this.day) {
       this.day = today;
@@ -55,11 +74,7 @@ export class Limiter {
       this.recent.set(client, window);
       return { ok: false, scope: 'minute', retryAfterSeconds: Math.ceil((window[0]! + MINUTE - t) / 1000) };
     }
-    window.push(t);
     this.recent.set(client, window);
-    this.daily.set(client, used + 1);
-    this.globalCount += 1;
-    if (this.recent.size > 10_000) this.prune(t);
     return { ok: true };
   }
 

@@ -67,6 +67,16 @@ test('a wrong invite code is forgotten and the form comes back', async ({ page }
   await expect(page.locator('.layer')).toHaveCount(4); // piece unchanged
 });
 
+test('after too many wrong codes the page says to wait and asks for the code again', async ({ page }) => {
+  await aiOn(page, () => ({ status: 429, json: { error: 'locked' } }));
+  await page.addInitScript(() => localStorage.setItem('gl.invite', 'wrong'));
+  await page.goto('/');
+  await page.fill('#prompt', 'add drums');
+  await page.press('#prompt', 'Enter');
+  await expect(page.locator('.msg.err').last()).toContainText('Too many wrong invite codes');
+  await expect(page.locator('#inviteForm')).toBeVisible();
+});
+
 test('a refusal leaves the piece unchanged and says so in plain words', async ({ page }) => {
   await aiOn(page, () => ({ status: 422, json: { error: 'refused' } }));
   await page.addInitScript(() => localStorage.setItem('gl.invite', 'open-sesame'));
