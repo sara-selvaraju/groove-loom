@@ -61,6 +61,19 @@ On iPhone the page played silently while the shuttle moved. Two causes, both fix
 - **Production phase:** users bring their own key and choose their own model. Keys stay in the user's browser and requests go directly to the provider, so the service never holds anyone's credentials. This also keeps running costs near zero for the project and for anyone who forks it.
 - Both phases sit behind one `Composer` interface, so moving from phase 1 to phase 2 adds code rather than rewriting it, and every response still passes the same validation.
 
+## Visual design: a weaving studio in daylight
+
+The first redesign after the port, made because the page needed more life and the loom more room.
+
+- **The loom is the one bold thing.** It takes about two thirds of the width and most of the screen's height, with the conversation beside it. Playback and the whole-piece controls sit in one strip below; the layers sit below that as cards, several across rather than one long list.
+- **Light by default.** A cool daylight room (not warm cream) gives the fabric space, with deep indigo ink for text and buttons so the threads carry all the colour. Dark mode follows the device setting.
+- **Dyed thread colours.** Eight saturated colours named after natural dyes (madder, weld, verdigris, woad, saffron, cochineal, teal, logwood), ordered so neighbouring layers differ in hue.
+- **Layers as yarn cards.** Each card has a strip of wound thread in the layer's colour, and draws its rhythm as a row of squares like weaver's draft paper, read from the compiled pattern so it always matches what plays. This shows the maths directly: "3 hits over 8 steps" is visible.
+- **Sentence case, no all-caps labels.** Recursive stays, with its casual axis used in headings.
+- **Loom vibrancy.** Between hits a layer's band is a softer tint, so each hit stands out in full colour; silent layers and preview bars are less washed out; brighter, warmer light on the yarn and the wood.
+
+A second pass makes the loom itself more realistic: the frame, the warp under tension, a reed and a shuttle.
+
 ## Open questions
 
 - Where forkers are most likely to extend: visualisers, instrument packs, the AI's musical vocabulary, or all three. This decides where the extension points go.

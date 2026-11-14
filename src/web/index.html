@@ -7,91 +7,95 @@
     <meta name="description" content="Describe music in plain words and watch a loom weave it into a tapestry." />
   </head>
   <body>
-<div class="wrap">
+<div class="studio">
   <header class="top">
-    <h1 class="brand">Groove<span>Loom</span></h1>
-    <p class="tag">Describe music in plain words. Watch its shape.</p>
+    <h1 class="brand">Groove Loom</h1>
+    <p class="tag">Describe music in plain words. Watch it weave.</p>
   </header>
 
-  <div class="grid">
-    <div class="left stack">
-      <section class="panel" aria-label="Your cloth and transport">
-        <div class="cloth-head"><span class="label">Your cloth</span><span class="note num" id="clothStat">0 bars woven</span></div>
-        <div class="cloth-box">
-          <canvas id="cloth" role="img" aria-label="Woven cloth: each band is one bar, each coloured thread is a layer, and the thread shows on the surface wherever that layer plays"></canvas>
-          <canvas id="tapestry" hidden role="img" aria-label="Tapestry on a loom: each band is one bar, each coloured thread is a layer, and the thread rises to the surface wherever that layer plays"></canvas>
-          <div class="tap-tags" id="tapTags" aria-hidden="true"></div>
-          <div class="cloth-hint" id="clothHint">Preview. Press play to start weaving.</div>
-        </div>
-        <div class="legend" id="legend"></div>
+  <main class="stage">
+    <section class="loom" aria-label="The loom">
+      <div class="cloth-box">
+        <canvas id="cloth" role="img" aria-label="Woven cloth: each band is one bar, each coloured thread is a layer, and the thread shows on the surface wherever that layer plays"></canvas>
+        <canvas id="tapestry" hidden role="img" aria-label="Tapestry on a loom: each band is one bar, each coloured thread is a layer, and the thread rises to the surface wherever that layer plays"></canvas>
+        <div class="tap-tags" id="tapTags" aria-hidden="true"></div>
+        <div class="cloth-hint" id="clothHint">Preview. Press play to start weaving.</div>
+        <span class="cloth-stat num" id="clothStat">0 bars woven</span>
+      </div>
+      <div class="legend" id="legend"></div>
+    </section>
 
-        <div class="transport">
-          <button class="play" id="play" aria-label="Play">
-            <svg viewBox="0 0 24 24" id="playIcon"><path d="M7 4.5v15l13-7.5z"/></svg>
-          </button>
-          <div class="ctl">
-            <div class="ctl-row"><label for="tempo"><b>Tempo</b></label><output id="tempoOut" class="num">100 bpm</output></div>
-            <input type="range" id="tempo" min="60" max="180" step="1" value="100">
-          </div>
-          <div class="ctl">
-            <div class="ctl-row"><label for="swing"><b>Swing</b></label><output id="swingOut" class="num">straight</output></div>
-            <input type="range" id="swing" min="0" max="1" step="0.01" value="0">
-          </div>
-          <div class="ctl master">
-            <div class="ctl-row"><label for="volume"><b>Overall volume</b></label><output id="volumeOut" class="num">80%</output></div>
-            <input type="range" id="volume" min="0" max="1" step="0.01" value="0.8">
-          </div>
-          <div class="keyrow">
-            <div class="ctl"><label class="label" for="key">Key</label><select id="key"></select></div>
-            <div class="ctl"><label class="label" for="scale">Scale</label><select id="scale"></select></div>
-            <div class="ctl"><label class="label" for="bars">Record</label>
-              <select id="bars"><option value="4">4 bars</option><option value="8" selected>8 bars</option><option value="16">16 bars</option></select></div>
-          </div>
+    <section class="chat ask" aria-label="Tell the loom what you want">
+      <div class="ask-head"><h2 class="section-title">Tell the loom what you want</h2><button class="link-btn" id="clearChat" type="button">Clear chat</button></div>
+      <div class="log" id="log" aria-live="polite"></div>
+      <form class="ask-row" id="askForm">
+        <textarea id="prompt" rows="2" placeholder="e.g. throw in a syncopated trumpet"></textarea>
+        <button class="btn primary" id="send" type="submit">Send</button>
+      </form>
+      <div class="chips" id="chips"></div>
+      <p class="note" id="aiNote"></p>
+      <form class="invite" id="inviteForm" hidden>
+        <label class="field-label" for="invite">Invite code</label>
+        <div class="ask-row">
+          <input id="invite" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" />
+          <button class="btn" type="submit">Unlock the AI</button>
         </div>
-        <div class="tools">
-          <button class="btn" id="undo" disabled>Undo</button>
-          <button class="btn" id="reset">Start over</button>
-          <button class="btn" id="record">Make MP3</button>
-          <button class="btn" id="saveCloth">Save cloth</button>
-        </div>
-        <p class="note rec-note" id="recNote"></p>
-      </section>
+      </form>
+    </section>
+  </main>
+
+  <section class="deck" aria-label="Playback and the whole piece">
+    <div class="deck-controls">
+      <button class="play" id="play" aria-label="Play">
+        <svg viewBox="0 0 24 24" id="playIcon"><path d="M7 4.5v15l13-7.5z"/></svg>
+      </button>
+      <div class="ctl">
+        <div class="ctl-row"><label for="tempo">Tempo</label><output id="tempoOut" class="num">100 bpm</output></div>
+        <input type="range" id="tempo" min="60" max="180" step="1" value="100">
+      </div>
+      <div class="ctl">
+        <div class="ctl-row"><label for="swing">Swing</label><output id="swingOut" class="num">straight</output></div>
+        <input type="range" id="swing" min="0" max="1" step="0.01" value="0">
+      </div>
+      <div class="ctl">
+        <label class="field-label" for="key">Key</label><select id="key"></select>
+      </div>
+      <div class="ctl">
+        <label class="field-label" for="scale">Scale</label><select id="scale"></select>
+      </div>
+      <div class="ctl">
+        <div class="ctl-row"><label for="volume">Overall volume</label><output id="volumeOut" class="num">80%</output></div>
+        <input type="range" id="volume" min="0" max="1" step="0.01" value="0.8">
+      </div>
     </div>
-
-    <div class="stack">
-      <section class="panel ask" aria-label="Describe your music">
-        <div class="ask-head"><span class="label">Tell the loom what you want</span><button class="link-btn" id="clearChat" type="button">Clear chat</button></div>
-        <div class="log" id="log" aria-live="polite"></div>
-        <form class="ask-row" id="askForm">
-          <textarea id="prompt" rows="2" placeholder="e.g. throw in a syncopated trumpet"></textarea>
-          <button class="btn primary" id="send" type="submit">Send</button>
-        </form>
-        <div class="chips" id="chips"></div>
-        <p class="note" id="aiNote"></p>
-        <form class="invite" id="inviteForm" hidden>
-          <label class="label" for="invite">Invite code</label>
-          <div class="ask-row">
-            <input id="invite" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" />
-            <button class="btn" type="submit">Unlock the AI</button>
-          </div>
-        </form>
-      </section>
-
-      <section class="panel" aria-label="Layers">
-        <div class="ctl-row layers-head"><span class="label">Layers</span><span class="note" id="layerCount"></span></div>
-        <div class="layers" id="layers"></div>
-      </section>
-
-      <section class="panel">
-        <details class="code" id="codeBox">
-          <summary>Under the hood: the Strudel code</summary>
-          <p class="note code-note">The loom never runs code from the AI. The AI returns a description of the layers, the app checks it, and builds this pattern from it. This listing is generated from the same description, so it always matches what you hear.</p>
-          <pre class="code mono" id="code"></pre>
-        </details>
-      </section>
-      <p class="note credits">Sounds: drums from the <a href="https://github.com/sgossner/VCSL" target="_blank" rel="noopener">Versilian Community Sample Library</a> (CC0). Instruments from Fluid R3 GM by Frank Wen, via <a href="https://github.com/gleitz/midi-js-soundfonts" target="_blank" rel="noopener">midi-js-soundfonts</a> (<a href="https://creativecommons.org/licenses/by/3.0/" target="_blank" rel="noopener">CC BY 3.0</a>). Audio engine: <a href="https://strudel.cc" target="_blank" rel="noopener">Strudel</a> (AGPL-3.0).</p>
+    <div class="deck-tools">
+      <div class="tool-group">
+        <button class="btn" id="undo" disabled>Undo</button>
+        <button class="btn" id="reset">Start over</button>
+      </div>
+      <div class="tool-group">
+        <label class="sr-only" for="bars">Length of the MP3</label>
+        <select id="bars"><option value="4">4 bars</option><option value="8" selected>8 bars</option><option value="16">16 bars</option></select>
+        <button class="btn" id="record">Make MP3</button>
+        <button class="btn" id="saveCloth">Save cloth</button>
+      </div>
     </div>
-  </div>
+    <p class="note rec-note" id="recNote" aria-live="polite"></p>
+  </section>
+
+  <section class="threads" aria-label="Layers">
+    <div class="threads-head"><h2 class="section-title">Layers</h2><span class="note" id="layerCount"></span></div>
+    <div class="layers" id="layers"></div>
+  </section>
+
+  <footer class="foot">
+    <details class="code" id="codeBox">
+      <summary>Under the hood: the Strudel code</summary>
+      <p class="note code-note">The loom never runs code from the AI. The AI returns a description of the layers, the app checks it, and builds this pattern from it. This listing is generated from the same description, so it always matches what you hear.</p>
+      <pre class="code mono" id="code"></pre>
+    </details>
+    <p class="note credits">Sounds: drums from the <a href="https://github.com/sgossner/VCSL" target="_blank" rel="noopener">Versilian Community Sample Library</a> (CC0). Instruments from Fluid R3 GM by Frank Wen, via <a href="https://github.com/gleitz/midi-js-soundfonts" target="_blank" rel="noopener">midi-js-soundfonts</a> (<a href="https://creativecommons.org/licenses/by/3.0/" target="_blank" rel="noopener">CC BY 3.0</a>). Audio engine: <a href="https://strudel.cc" target="_blank" rel="noopener">Strudel</a> (AGPL-3.0).</p>
+  </footer>
 </div>
     <script type="module" src="./main.ts"></script>
   </body>

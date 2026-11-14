@@ -102,11 +102,13 @@ function renderLayers(): void {
     const inst = INSTR[L.instrument]!;
     const card = document.createElement('article');
     card.className = 'layer' + (on[i] ? '' : ' off');
+    card.style.setProperty('--thread', `var(${LAYER_VARS[i % 8]})`);
+    const yarn = document.createElement('span');
+    yarn.className = 'yarn';
+    yarn.setAttribute('aria-hidden', 'true');
+    card.append(yarn);
     const h = document.createElement('div');
     h.className = 'lh';
-    const sw = document.createElement('span');
-    sw.className = 'sw';
-    sw.style.background = `var(${LAYER_VARS[i % 8]})`;
     const nm = document.createElement('span');
     nm.className = 'nm';
     nm.textContent = L.name;
@@ -144,7 +146,7 @@ function renderLayers(): void {
         update();
       }),
     );
-    h.append(sw, nm, ins, sp, btns);
+    h.append(nm, ins, sp, btns);
     card.append(h);
     if (L.about) {
       const a = document.createElement('p');
@@ -152,6 +154,11 @@ function renderLayers(): void {
       a.textContent = L.about;
       card.append(a);
     }
+    const draft = document.createElement('div');
+    draft.className = 'draft';
+    draft.setAttribute('role', 'img');
+    fillDraft(draft, L, i);
+    card.append(draft);
     const pat = document.createElement('div');
     pat.className = 'pat mono';
     pat.textContent = patternText(L);
@@ -206,13 +213,43 @@ function renderLayers(): void {
   });
 }
 
-/** Keep the pattern readouts in step with the even-spacing sliders without re-rendering the cards. */
+/** Keep the pattern readouts and drafts in step with the even-spacing sliders without re-rendering the cards. */
 function renderPatTexts(): void {
   const cards = $('layers').querySelectorAll('.layer');
   state.piece.layers.forEach((L, i) => {
     const p = cards[i]?.querySelector('.pat');
     if (p) p.textContent = patternText(L);
+    const d = cards[i]?.querySelector<HTMLDivElement>('.draft');
+    if (d) fillDraft(d, L, i);
   });
+}
+
+/**
+ * The layer's first bar as weaver's draft paper: one square per step, filled
+ * where a note or hit starts. Read from the compiled pattern, so it always
+ * matches what plays.
+ */
+function fillDraft(box: HTMLDivElement, L: Layer, i: number): void {
+  const steps = L.rhythm?.mode === 'euclid' ? L.rhythm.steps : 16;
+  const on = new Array<boolean>(steps).fill(false);
+  try {
+    for (const h of state.compiled?.perLayer[i]?.queryArc(0, 1) ?? []) {
+      const at = Math.floor(h.part.begin.valueOf() * steps + 1e-6);
+      if (at >= 0 && at < steps) on[at] = true;
+    }
+  } catch {
+    // a pattern that cannot be queried draws as empty
+  }
+  box.style.setProperty('--steps', String(steps));
+  box.textContent = '';
+  const beat = steps % 4 === 0 ? steps / 4 : 0;
+  on.forEach((hit, k) => {
+    const cell = document.createElement('i');
+    if (hit) cell.className = 'on';
+    if (beat && k % beat === 0) cell.classList.add('beat');
+    box.append(cell);
+  });
+  box.setAttribute('aria-label', `${on.filter(Boolean).length} of ${steps} steps play in the first bar`);
 }
 
 function renderLog(): void {
@@ -269,8 +306,8 @@ function rebuild(): void {
 
 function update(): void {
   renderTransport();
+  rebuild(); // compiles first, so the layer drafts read the new pattern
   renderLayers();
-  rebuild();
 }
 
 function snapshot(): void {
