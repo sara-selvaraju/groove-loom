@@ -47,6 +47,18 @@ What the tapestry encodes:
 - Levels were measured per instrument and balanced, and a limiter sits on the master output.
 - The tone control was remapped so its midpoint is the instrument's natural sound.
 
+## A wider sound palette: echo, grit and accents
+
+Compared with what Strudel can do, the piece model was narrow. The first additions, chosen for how much they change the sound for how little they add to the controls:
+
+- **Echo** (a knob): repeats on the dotted eighth, Strudel's default delay timing, which follows the tempo. The knob sets the level and, with it, how many repeats.
+- **Grit** (a knob): saturation through to distortion (`shape`), with the level brought down so it adds character rather than volume.
+- **Accents** (written by the AI): louder and softer hits as numbers 0 to 1 in the same notation as notes, checked like notes and limited to levels of 1 or less. The layer's draft shades softer hits paler.
+- **One effects channel per layer** (`orbit`), because Strudel shares echo and reverb within a channel; without it one layer's settings would spill into another's.
+- **Effects processors load up front.** Strudel loads them only once audio starts, so the first note needing one (grit) was dropped; they now load as soon as the engine is ready and play waits for them.
+
+Still possible later: filter sweeps and resonance, more synth sounds (triangle, a pitch-drop kick, FM), chord changes bar by bar, breakbeats and drum-machine kits (licences permitting), and arrangement over many bars.
+
 ## Phone audio
 
 On iPhone the page played silently while the shuttle moved. Two causes, both fixed:
@@ -87,18 +99,6 @@ Seen on real hardware with six layers, the redesigned cloth read as stripes rath
 
 - **Notes in full colour, everything else nearly undyed.** Between notes a layer's row is a faint tint of its colour (so the row can still be found); a muted layer is almost undyed. Notes are raised, a touch richer in colour, with more sheen and soft shadows on the cloth around them. The rhythm is now the pattern: four kicks and two snares per bar are visible at a glance.
 - **Start from bare warp.** Before anything is woven, the loom shows bare warp with only the first bar sketched faintly at the weaving edge, so pressing play grows the cloth from nothing.
-
-## A wider sound palette: echo, grit and accents
-
-Compared with what Strudel can do, the piece model was narrow. The first additions, chosen for how much they change the sound for how little they add to the controls:
-
-- **Echo** (a knob): repeats on the dotted eighth, Strudel's default delay timing, which follows the tempo. The knob sets the level and, with it, how many repeats.
-- **Grit** (a knob): saturation through to distortion (`shape`), with the level brought down so it adds character rather than volume.
-- **Accents** (written by the AI): louder and softer hits as numbers 0 to 1 in the same notation as notes, checked like notes and limited to levels of 1 or less. The layer's draft shades softer hits paler.
-- **One effects channel per layer** (`orbit`), because Strudel shares echo and reverb within a channel; without it one layer's settings would spill into another's.
-- **Effects processors load up front.** Strudel loads them only once audio starts, so the first note needing one (grit) was dropped; they now load as soon as the engine is ready and play waits for them.
-
-Still possible later: filter sweeps and resonance, more synth sounds (triangle, a pitch-drop kick, FM), chord changes bar by bar, breakbeats and drum-machine kits (licences permitting), and arrangement over many bars.
 
 ## Open questions
 
