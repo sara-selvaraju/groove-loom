@@ -81,6 +81,13 @@ The second pass made the loom itself more realistic (`src/web/loom-frame.ts`):
 - In the cloth: darker selvedges, and a soft shadow just behind the weaving edge.
 - A soft fill light from the weaver's side, so the faces of the reed, shuttle and beam are not in shade. Steel is kept mostly non-metallic because, with nothing to reflect, true metal renders black.
 
+## The notes carry the colour
+
+Seen on real hardware with six layers, the redesigned cloth read as stripes rather than music: every layer had a coloured band across the full width whether it played or not, so the notes were only slightly brighter bumps, sustained layers were solid stripes, and sixty identical preview bars looked like wallpaper.
+
+- **Notes in full colour, everything else nearly undyed.** Between notes a layer's row is a faint tint of its colour (so the row can still be found); a muted layer is almost undyed. Notes are raised, a touch richer in colour, with more sheen and soft shadows on the cloth around them. The rhythm is now the pattern: four kicks and two snares per bar are visible at a glance.
+- **Start from bare warp.** Before anything is woven, the loom shows bare warp with only the first bar sketched faintly at the weaving edge, so pressing play grows the cloth from nothing.
+
 ## Open questions
 
 - Where forkers are most likely to extend: visualisers, instrument packs, the AI's musical vocabulary, or all three. This decides where the extension points go.

@@ -90,8 +90,8 @@ export function paintRow(ctx: Ctx, row: Row, y0: number, W: number, T: Tokens, u
   picks.forEach((p, pi) => {
     const h = pickH(colW, p.g),
       pk = p.g ? null : row.picks[p.k]!;
-    // a layer's thread is woven plainly (muted colour) while silent, and floats bright on top while it sounds
-    const groundCol = pk && !pk.muted ? mix(T.layers[pk.ci] || T.ink, T.weft, 0.5) : T.weft;
+    // the notes carry the colour: between notes a layer's row is a faint tint, and each note floats in full colour on top
+    const groundCol = pk && !pk.muted ? mix(T.layers[pk.ci] || T.ink, T.weft, 0.8) : T.weft;
     const covered = new Uint8Array(COLS);
     if (pk && !pk.muted) for (const sg of pk.segs) for (let c = sg.c0; c < sg.c1; c++) covered[c] = 1;
     for (let c = 0; c < COLS; c++) {
@@ -202,14 +202,12 @@ export function drawFlat(ph?: number): void {
     drawShuttle(cx, Math.min(W - 15 * dpr, Math.max(15 * dpr, (ph || 0) * W)), y + bh * 0.5, T);
     tag(curRow, y);
   } else if (!rows.length) {
-    // nothing woven yet: preview the cloth, bar 1 at the top and later bars below it
-    const bh = bandH(makeRow(0, null), colW),
-      n = Math.max(1, Math.ceil(fell / bh));
-    for (let c = n - 1; c >= 0; c--) {
-      const r = makeRow(c, null);
-      r.seed = 1000 + c;
-      y -= bh;
-      cx.globalAlpha = 0.8;
+    // nothing woven yet: bare warp, with the first bar sketched faintly at the weaving edge
+    if (state.piece.layers.length) {
+      const r = makeRow(0, null);
+      r.seed = 999;
+      y -= bandH(r, colW);
+      cx.globalAlpha = 0.5;
       paintRow(cx, r, y, W, T);
       cx.globalAlpha = 1;
     }
