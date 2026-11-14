@@ -4,6 +4,8 @@ A record of what was decided while designing the prototype, and why. Newest entr
 
 ## Audience and purpose
 
+(Audience and purpose were sharpened later; see "North star: help me say what I hear" below.)
+
 - **Audience: curious non-musicians.** Musicians already have their own tools. Groove Loom is for anyone who wants to tinker.
 - **Purpose: exploration first, teaching second.** The aim is for people to appreciate the language, shape and mathematical patterns of music while feeling they are creating something of their own.
 - **Code hidden by default, with a way to look.** The exploration, with the AI's help, is the main experience. Strudel stays behind the scenes, and an "under the hood" panel shows the generated code for anyone curious.
@@ -117,6 +119,17 @@ The moment the music connects to the weave is the bar being woven, so it is mark
 - Each note lights up as it is woven, which is the moment it is heard (the shuttle position is the audio clock), then settles into the cloth over about a sixteenth of a bar.
 - A layer's legend dot grows and glows while one of its notes sounds (no growth when reduced motion is set).
 - On phones and narrow screens a play button sits on the loom itself, because the control strip is below the conversation and out of view.
+
+## North star: help me say what I hear
+
+After the first round of building, the purpose was sharpened to one ask and one outcome.
+
+- **One ask:** "Help me say what I hear."
+- **One outcome:** someone arrives describing music in their own words, and leaves able to ask for it in music's words. A person who starts with "make it bouncier" and later asks for "some swing on the hi-hats" is the product working.
+- **Audience: students and explorers of music.** People who want to create at the level of instruments, rhythm and melody but don't have the language yet. This replaces "curious non-musicians": the audience wants to learn, not only tinker, and teaching moves from second to first.
+- **The test for every feature:** does it help someone gain a word or a pattern they can use next time? The glossary under each reply and the tapestry pass directly. Realism, more instruments and export polish are welcome but do not move the outcome, so they come after work that does.
+- **Measuring it without reading people's words.** The browser knows which terms a person has been shown, so it can count on the device how often they later use one themselves and send only the count. Not built yet.
+- **What it points to next:** a "your words" collection that builds across sessions, and replies that nudge people to use the terms they have learnt ("next time you could ask for more swing") and notice when they do.
 
 ## Open questions
 
