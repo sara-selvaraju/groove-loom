@@ -175,3 +175,35 @@ export function sanitizePiece(
   }
   return out;
 }
+
+/**
+ * Layers in an unvalidated piece that sanitizePiece left out, named so the
+ * person can be told: either past the layer limit, or with an instrument the
+ * loom does not have.
+ */
+export function droppedLayers(raw: unknown, kept: Piece): { overLimit: string[]; unknownInstrument: string[] } {
+  const out = { overLimit: [] as string[], unknownInstrument: [] as string[] };
+  if (!isObject(raw) || !Array.isArray(raw.layers)) return out;
+  let valid = 0;
+  for (const l of raw.layers as unknown[]) {
+    if (!isObject(l)) continue;
+    const instrument = typeof l.instrument === 'string' ? (INSTR_ALIASES[l.instrument] ?? l.instrument) : '';
+    const name = cleanText(l.name, 28) || (Object.hasOwn(INSTR, instrument) ? INSTR[instrument]!.label : instrument || 'a layer');
+    if (!Object.hasOwn(INSTR, instrument)) out.unknownInstrument.push(name);
+    else if (++valid > kept.layers.length) out.overLimit.push(name);
+  }
+  return out;
+}
+
+/** A plain-words note about anything droppedLayers found, or an empty string. */
+export function droppedNote(d: { overLimit: string[]; unknownInstrument: string[] }): string {
+  const list = (names: string[]) => (names.length === 1 ? names[0]! : `${names.slice(0, -1).join(', ')} and ${names.at(-1)}`);
+  const parts: string[] = [];
+  if (d.overLimit.length)
+    parts.push(
+      `The loom holds at most ${MAX_LAYERS} layers, so ${list(d.overLimit)} ${d.overLimit.length === 1 ? "wasn't" : "weren't"} added. Remove a layer, or ask me to swap one out.`,
+    );
+  if (d.unknownInstrument.length)
+    parts.push(`${list(d.unknownInstrument)} used an instrument the loom doesn't have, so ${d.unknownInstrument.length === 1 ? 'it was' : 'they were'} left out.`);
+  return parts.join(' ');
+}

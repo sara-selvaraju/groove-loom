@@ -7,7 +7,7 @@ import { timingSafeEqual } from 'node:crypto';
 import type { Context, Hono } from 'hono';
 import { bodyLimit } from 'hono/body-limit';
 import { COMPOSE_SCHEMA } from '../shared/compose-schema.js';
-import { cleanText, sanitizePiece, type Piece } from '../shared/piece.js';
+import { cleanText, droppedLayers, droppedNote, sanitizePiece, type Piece } from '../shared/piece.js';
 import { INSTRUCTIONS, buildRequest, type ChatMessage } from '../shared/prompt.js';
 import { Limiter } from './limiter.js';
 import { parsesAsMini } from './mini.js';
@@ -185,7 +185,11 @@ export function mountCompose(app: Hono, options: ComposeOptions): void {
       done(502, { ...usage, reason: 'invalid_piece' });
       return fail(c, 502, 'invalid_json');
     }
-    done(200, usage);
-    return c.json({ reply: cleanText(parsed.reply, 500) || 'Done.', piece: next });
+    // If the checks left anything out, say so: the reply may describe layers that never made it in.
+    const dropped = droppedLayers(parsed.piece, next);
+    const note = droppedNote(dropped);
+    done(200, { ...usage, overLimit: dropped.overLimit.length, unknownInstrument: dropped.unknownInstrument.length });
+    const reply = cleanText(parsed.reply, 500) || 'Done.';
+    return c.json({ reply: note ? `${reply}\n\n${note}` : reply, piece: next });
   });
 }

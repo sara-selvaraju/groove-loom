@@ -276,6 +276,7 @@ img {
   }
 }
 .msg {
+  white-space: pre-line;
   font-size: 14px;
   line-height: 1.45;
   padding: 10px 13px;

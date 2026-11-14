@@ -40,9 +40,13 @@ export function buildRequest(request: string, piece: Piece, history: ChatMessage
     .map((m) => `${m.who === 'you' ? 'Person' : 'You'}: ${m.text}`)
     .join('\n');
   const current = { ...piece, layers: piece.layers.map(({ solo: _solo, ...rest }) => rest) };
+  const full =
+    piece.layers.length >= MAX_LAYERS
+      ? `\nThe piece already has ${piece.layers.length} layers, the most it can hold. To add a layer, replace or remove one and say which in your reply.\n`
+      : '';
   return `Current piece:
 ${JSON.stringify(current)}
-
+${full}
 Recent conversation:
 ${recent || '(none)'}
 

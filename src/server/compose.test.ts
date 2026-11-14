@@ -144,6 +144,22 @@ describe('POST /api/compose: success', () => {
     expect(body.piece.layers[0]!.extra).toBeUndefined();
   });
 
+  it('tells the person when a layer was left out because the loom was full', async () => {
+    const layers = [
+      ...Array.from({ length: 8 }, (_, i) => ({ ...GOOD_REPLY.piece.layers[0]!, id: `d${i}`, name: `Drum ${i}` })),
+      { ...GOOD_REPLY.piece.layers[4]!, id: 'pno', name: 'Piano', instrument: 'piano' },
+    ];
+    const reply = { reply: 'I added a piano playing broken chords.', piece: { ...GOOD_REPLY.piece, layers } };
+    const { post, logs } = setup({ reply: message({ text: JSON.stringify(reply) }) });
+    const body = (await (await post(ask)).json()) as { reply: string; piece: { layers: unknown[] } };
+    expect(body.piece.layers).toHaveLength(8);
+    expect(body.reply).toBe(
+      "I added a piano playing broken chords.\n\nThe loom holds at most 8 layers, so Piano wasn't added. Remove a layer, or ask me to swap one out.",
+    );
+    expect(logs[0]).toMatchObject({ overLimit: 1, unknownInstrument: 0 });
+    expect(JSON.stringify(logs)).not.toContain('Piano');
+  });
+
   it('logs usage but never the request, the piece or the reply', async () => {
     const { post, logs } = setup();
     await post(ask);
