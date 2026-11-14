@@ -45,13 +45,30 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm install --global "@railway/cli@$RAILWAY_CLI_VERSION"
-      - name: Diagnose token (temporary)
+      - name: Diagnose plan (temporary)
         run: |
-          echo "--- status"; railway status --json 2>&1 | jq -r '"project=\(.name) envs=\([.environments.edges[].node.name])"' 2>&1 || true
-          echo "--- whoami"; railway whoami 2>&1 || true
-          echo "--- plan (no flags)"; railway config plan 2>&1 | tail -15 || true
-          echo "--- plan --verbose"; railway config plan --verbose 2>&1 | tail -5 || true
-          echo "--- plan with RAILWAY_DEBUG"; RAILWAY_DEBUG=1 railway config plan 2>&1 | grep -iv "token" | tail -25 || true
+          mkdir -p .railway/diag
+          base='.railway/railway.ts'
+          # A: no partial export
+          grep -v '^export const partial' "$base" > .railway/diag/a.ts
+          # B: no project variables block
+          python3 - <<'PY'
+          import re
+          s=open('.railway/railway.ts').read()
+          s=re.sub(r"\s*// Variables.*?\n.*?\n\s*variables: \{ managed: false \},", "", s, flags=re.S)
+          open('.railway/diag/b.ts','w').write(s)
+          s2=s.replace("export const partial = 'groove-loom';","")
+          open('.railway/diag/c.ts','w').write(s2)
+          PY
+          cat > .railway/diag/d.ts <<'TS'
+          import { defineRailway, project, service } from 'railway/iac';
+          export default defineRailway(() => project('sweet-charisma', { resources: [service('groove-loom', { start: 'npm start' })] }));
+          TS
+          for f in a b c d; do
+            echo "=== $f"; grep -c partial .railway/diag/$f.ts || true; grep -c 'managed: false' .railway/diag/$f.ts || true
+            railway config plan --file .railway/diag/$f.ts 2>&1 | tail -6 || true
+          done
+          rm -rf .railway/diag
       - name: Plan
         run: |
           set -o pipefail
