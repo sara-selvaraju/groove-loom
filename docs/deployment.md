@@ -63,6 +63,7 @@ These steps are done once, in the Railway and GitHub dashboards. They cannot liv
 5. Under **Source**, check the connected repository is `groove-loom` and the connected branch is `main`.
 6. Under the branch, turn on **Wait for CI**. Railway then holds each deploy until every GitHub Actions workflow on that commit has passed. If the option is missing, it is because `main` has no workflows yet; it appears once the pipeline pull request is merged, so come back and turn it on then.
 7. Under **Networking → Public Networking**, choose **Generate Domain**. If asked for a port, enter `8080` (Railway passes the app its port in `PORT`, usually 8080).
+8. Railway holds settings changes until they are applied: the service card shows **Edited** and a count of changes. Choose **Deploy** in the bar at the top of the project page to apply them (**Details** lists what is pending).
 
 **Check:** the staging service shows a `.up.railway.app` address under Networking. Opening it shows a Railway error page until the first staging deploy; that is expected.
 
@@ -74,6 +75,7 @@ These steps are done once, in the Railway and GitHub dashboards. They cannot liv
 2. Click the service, then open **Settings**.
 3. Under **Source**, find the branch connected to `production` and choose **Disconnect** for the branch. Keep the repository connection itself.
 4. Under **Networking → Public Networking**, choose **Generate Domain**, with port `8080` if asked.
+5. Apply the pending changes with **Deploy** in the bar at the top of the project page. With the branch disconnected and nothing deployable on `main` yet, this may only save the settings.
 
 Production now only changes when the tag workflow runs `railway up`. Without this step, every merge to `main` would deploy to production as well as staging.
 
@@ -145,9 +147,9 @@ A tag ruleset targeting `v*` that restricts creation to admins stops anyone else
 
 1. **Merge the pipeline pull request.** CI runs on the merge commit, then Railway deploys staging. Watch it under the service's **Deployments** in `staging`.
 2. **Check staging.** Open the staging address. The page should say "Server is up: version 0.1.0" followed by a short build code. If **Wait for CI** was missing in Railway step 2, turn it on now.
-3. **Check `railway.json` is in use.** Railway only applies the file once it has deployed a commit containing it. In `staging`, open the service's **Settings** and check that the build command, start command, health check and restart policy show as set by the config file.
+3. **Check `railway.json` is in use.** Railway does not copy the file's values into the service's **Settings** page, so empty build and start command fields there are normal. Instead, open the latest deploy under **Deployments** and look at its **Details**, which mark the settings that came from `railway.json`. The deploy logs should also show a health check on `/healthz`, which is only set in the file.
 4. **Release.** On an up-to-date `main`, run `npm version patch && git push --follow-tags`, or tag the current version with `git tag v0.1.0 && git push origin v0.1.0`. Approve the `production` deployment under **Actions → Deploy production**.
-5. **Check production.** The workflow ends once production reports the new version. Open the production address to confirm, then repeat check 3 in `production`.
+5. **Check production.** The workflow ends once production reports the new version. Open the production address to confirm, then repeat check 3 for the production deploy.
 
 ## Local development
 
