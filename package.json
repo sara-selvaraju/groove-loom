@@ -9,9 +9,9 @@
     "node": "22.x"
   },
   "scripts": {
-    "dev": "concurrently -n web,server -c magenta,cyan \"npm:dev:web\" \"npm:dev:server\"",
+    "dev": "node scripts/build-server.mjs && concurrently -n web,build,server -c magenta,yellow,cyan \"npm:dev:web\" \"npm:dev:build\" \"npm:dev:server\"",
     "dev:web": "vite",
-    "dev:server": "PORT=8787 tsx watch src/server/index.ts",
+    "dev:server": "PORT=8787 node --watch --env-file-if-exists=.env dist/server/index.js",
     "build": "npm run build:web && npm run build:server",
     "build:web": "vite build",
     "build:server": "node scripts/build-server.mjs",
@@ -20,9 +20,11 @@
     "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.server.json",
     "test": "vitest run",
     "test:smoke": "playwright test",
-    "postinstall": "node scripts/extract-worklets.mjs"
+    "postinstall": "node scripts/extract-worklets.mjs",
+    "dev:build": "node scripts/build-server.mjs --watch"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "1.8.0",
     "@breezystack/lamejs": "1.2.7",
     "@fontsource-variable/recursive": "5.3.0",
     "@hono/node-server": "2.1.8",

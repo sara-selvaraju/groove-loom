@@ -6,7 +6,7 @@ It is built for people who are not musicians, as a way to explore the language, 
 
 ## Status
 
-`prototype/` holds the working prototype: a single HTML page first built and published as a claude.ai artifact. It has been ported into a proper web app under `src/` with the same behaviour; the prototype stays as the reference until the app is confirmed to match it. The AI is not connected in the app yet. See [CLAUDE.md](CLAUDE.md) for the brief and the first tasks, and [docs/design-decisions.md](docs/design-decisions.md) for why things are the way they are.
+`prototype/` holds the working prototype: a single HTML page first built and published as a claude.ai artifact. It has been ported into a proper web app under `src/` with the same behaviour; the prototype stays as the reference until the app is confirmed to match it. The AI runs through the server with a shared invite code while it is being tested. See [CLAUDE.md](CLAUDE.md) for the brief and the first tasks, and [docs/design-decisions.md](docs/design-decisions.md) for why things are the way they are.
 
 ## Develop the app
 
