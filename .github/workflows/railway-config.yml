@@ -45,6 +45,13 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm install --global "@railway/cli@$RAILWAY_CLI_VERSION"
+      - name: Diagnose token (temporary)
+        run: |
+          echo "--- status"; railway status --json 2>&1 | jq -r '"project=\(.name) envs=\([.environments.edges[].node.name])"' 2>&1 || true
+          echo "--- whoami"; railway whoami 2>&1 || true
+          echo "--- plan (no flags)"; railway config plan 2>&1 | tail -15 || true
+          echo "--- plan --verbose"; railway config plan --verbose 2>&1 | tail -5 || true
+          echo "--- plan with RAILWAY_DEBUG"; RAILWAY_DEBUG=1 railway config plan 2>&1 | grep -iv "token" | tail -25 || true
       - name: Plan
         run: |
           set -o pipefail
