@@ -1,0 +1,42 @@
+{
+  "name": "groove-loom",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Describe music in plain words and watch a loom weave it into a tapestry.",
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "engines": {
+    "node": "22.x"
+  },
+  "scripts": {
+    "dev": "concurrently -n web,server -c magenta,cyan \"npm:dev:web\" \"npm:dev:server\"",
+    "dev:web": "vite",
+    "dev:server": "PORT=8787 tsx watch src/server/index.ts",
+    "build": "npm run build:web && npm run build:server",
+    "build:web": "vite build",
+    "build:server": "node scripts/build-server.mjs",
+    "start": "node dist/server/index.js",
+    "lint": "eslint .",
+    "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.server.json",
+    "test": "vitest run",
+    "test:smoke": "playwright test"
+  },
+  "dependencies": {
+    "@hono/node-server": "2.1.8",
+    "hono": "4.13.18"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@playwright/test": "1.65.1",
+    "@types/node": "22.20.5",
+    "concurrently": "10.0.7",
+    "esbuild": "0.28.2",
+    "eslint": "10.15.0",
+    "globals": "17.14.0",
+    "tsx": "4.23.15",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.72.2",
+    "vite": "8.3.8",
+    "vitest": "5.1.0"
+  }
+}
