@@ -12,7 +12,7 @@ Only the latest release, running at the production URL, is supported. Forks are 
 
 - The server: `/api/compose`, `/api/status`, `/healthz` and static file serving.
 - Anything that could spend the project's AI credit without the invite code, get round the request limits or the invite code lockout, or reveal the API key.
-- Anything that lets a piece (from the AI, browser storage or, later, a share link) run code or inject markup in the page.
+- Anything that lets a piece (from the AI, browser storage or a share link) run code or inject markup in the page.
 
 Problems in Strudel, three.js or other dependencies belong with those projects, unless Groove Loom uses them in an unsafe way.
 

@@ -141,6 +141,17 @@ The glossary under each reply scrolled away with the chat, so what a person lear
 - **It outlasts Clear chat and Start over**, because it is the person's learning, not the conversation. "Forget my words" empties it, after a confirmation.
 - **Privacy.** The list stays on the device. Only the terms go to the server, as part of the request, and they are not logged. The use counts never leave the device.
 
+## Share links
+
+A share link is the piece itself, compressed into the address after `#p=1.`. No database, nothing stored on the server.
+
+- **Data, never code.** An opened link is untrusted input, so it goes through the same `sanitizePiece` as an AI reply, after checks that keep it cheap to reject: a length limit, a format version, base64url characters only, and a cap on how much it may unpack to, so a link of a few kilobytes cannot expand into megabytes.
+- **After `#`, not `?`.** The fragment never reaches the server, so pieces are never in server or proxy logs, and browsers carry it through the bare domain's redirect to www, where GoDaddy's forwarding drops paths and queries.
+- **The piece only.** The chat, the invite code and Your words stay on the sender's device. Solo is left out, because it is a listening aid rather than part of the piece.
+- **Opening a link is undoable.** It replaces the piece, keeps the person's own piece for Undo, and says so in the chat. The fragment is then removed from the address, so a reload or the person's next share starts from their own piece. A damaged link changes nothing and says so.
+- **Phones get the share sheet**, computers get the link copied, with a fallback that shows the link to copy by hand.
+- **Format version `1.`** so the format can change later while old links still open.
+
 ## Open questions
 
 - Where forkers are most likely to extend: visualisers, instrument packs, the AI's musical vocabulary, or all three. This decides where the extension points go.
