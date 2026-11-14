@@ -89,6 +89,11 @@ void main(){
       if (ghost) { col = mix(col, uBg, 0.32); flatC = mix(flatC, uBg, 0.32); }
     }
     col = mix(flatC, col, detail);
+    // Selvedge: the outermost warps sit tighter and catch less light.
+    float edge = min(c, COLS - c);
+    col *= mix(0.8, 1.0, smoothstep(0.0, 1.6, edge));
+    // The reed's soft shadow on the cloth just behind the weaving edge.
+    if (d > 0.0) col *= 1.0 - 0.14 * exp(-d * 0.6);
   }
   col = mix(col, uBg, smoothstep(16.0, 36.0, distance(uCam, vW)) * 0.85);
   gl_FragColor = vec4(col, 1.0);
