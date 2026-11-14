@@ -131,6 +131,16 @@ After the first round of building, the purpose was sharpened to one ask and one 
 - **Measuring it without reading people's words.** The browser knows which terms a person has been shown, so it can count on the device how often they later use one themselves and send only the count. Not built yet.
 - **What it points to next:** a "your words" collection that builds across sessions, and replies that nudge people to use the terms they have learnt ("next time you could ask for more swing") and notice when they do.
 
+## Your words: a collection that builds across sessions
+
+The glossary under each reply scrolled away with the chat, so what a person learnt was lost. Now each reply's words go into **Your words**, a list kept on the device (`gl.words`) and opened from the chat panel.
+
+- **Each entry** shows the term, its meaning as first taught, and the person's own words that led to it ("From your words: “groovier”, “bouncier”"). A term taught again gains the new phrasing rather than a second entry.
+- **Using a word counts.** When a later request contains a collected term (`usedTerms`: whole words, ignoring case, hyphens and a plural s), the entry gets "✓ you used it". That tick is the north star made visible: the person asking in music's words.
+- **The AI builds on it.** Each request carries the collected terms (at most 40, checked by `sanitizeLearntTerms`), and the per-request prompt names them and any the person just used. The AI is told not to re-teach known words, to notice warmly when one is used, and about one reply in three to suggest how the person could ask next time using one of their words.
+- **It outlasts Clear chat and Start over**, because it is the person's learning, not the conversation. "Forget my words" empties it, after a confirmation.
+- **Privacy.** The list stays on the device. Only the terms go to the server, as part of the request, and they are not logged. The use counts never leave the device.
+
 ## Open questions
 
 - Where forkers are most likely to extend: visualisers, instrument packs, the AI's musical vocabulary, or all three. This decides where the extension points go.

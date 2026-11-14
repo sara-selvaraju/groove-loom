@@ -1,5 +1,16 @@
 import { describe, expect, it } from 'vitest';
-import { MAX_CHANGES, describeChanges, sanitizeChanges, sanitizeWords } from './learning.js';
+import {
+  MAX_CHANGES,
+  MAX_LEARNT,
+  MAX_LEARNT_SENT,
+  addWords,
+  describeChanges,
+  sanitizeChanges,
+  sanitizeCollection,
+  sanitizeLearntTerms,
+  sanitizeWords,
+  usedTerms,
+} from './learning.js';
 import { STARTER, sanitizePiece, type Piece } from './piece.js';
 import { parsesAsMini } from './test-support.js';
 
@@ -90,5 +101,75 @@ describe('describeChanges', () => {
     const out = describeChanges(a, b);
     expect(out).toHaveLength(MAX_CHANGES);
     expect(out.at(-1)).toMatch(/^and \d+ more changes$/);
+  });
+});
+
+describe('usedTerms', () => {
+  const terms = ['swing', 'off beat', 'minor scale', 'reverb', 'off-beat'];
+  it('finds terms the person used, ignoring case, hyphens and a plural s', () => {
+    expect(usedTerms('Add some SWING to the hats', terms)).toEqual(['swing']);
+    expect(usedTerms('more off-beat stabs', ['off beat'])).toEqual(['off beat']);
+    expect(usedTerms('make the offbeats louder', ['off beat'])).toEqual(['off beat']);
+    expect(usedTerms('switch to a minor scale', terms)).toEqual(['minor scale']);
+    expect(usedTerms('less reverbs', terms)).toEqual(['reverb']);
+  });
+  it('matches whole words only', () => {
+    expect(usedTerms('swingy swinging', ['swing'])).toEqual([]);
+    expect(usedTerms('something minor', ['minor scale'])).toEqual([]);
+    expect(usedTerms('anything', [''])).toEqual([]);
+  });
+});
+
+describe('addWords', () => {
+  it('adds new terms and keeps the first meaning of a known one, adding the new phrasing', () => {
+    let c = addWords([], [{ said: 'groovier', term: 'swing', meaning: 'late second notes' }]);
+    c = addWords(c, [
+      { said: 'bouncier', term: 'Swing', meaning: 'a different meaning' },
+      { said: 'Groovier', term: 'swing', meaning: 'x' },
+      { said: '', term: 'tempo', meaning: 'how fast' },
+    ]);
+    expect(c).toEqual([
+      { term: 'swing', meaning: 'late second notes', said: ['groovier', 'bouncier'], used: 0 },
+      { term: 'tempo', meaning: 'how fast', said: [], used: 0 },
+    ]);
+  });
+  it('does not change the collection it was given', () => {
+    const c = [{ term: 'swing', meaning: 'm', said: ['a'], used: 2 }];
+    addWords(c, [{ said: 'b', term: 'swing', meaning: 'm' }]);
+    expect(c[0]!.said).toEqual(['a']);
+  });
+  it(`keeps the newest ${MAX_LEARNT}`, () => {
+    const words = Array.from({ length: MAX_LEARNT + 5 }, (_, i) => ({ said: '', term: `t${i}`, meaning: 'm' }));
+    const c = addWords([], words);
+    expect(c).toHaveLength(MAX_LEARNT);
+    expect(c[0]!.term).toBe('t5');
+  });
+});
+
+describe('sanitizeCollection', () => {
+  it('keeps good entries and drops junk, duplicates and bad counts', () => {
+    const raw = [
+      { term: 'swing', meaning: 'm', said: ['a', 3, ''], used: 2.7 },
+      { term: 'SWING', meaning: 'dup', said: [], used: 0 },
+      { term: '', meaning: 'm' },
+      null,
+      { term: 'tempo', meaning: 'how fast', said: 'x', used: -4 },
+      { term: 'echo', meaning: 'm', used: Infinity },
+    ];
+    expect(sanitizeCollection(raw)).toEqual([
+      { term: 'swing', meaning: 'm', said: ['a', '3'], used: 2 },
+      { term: 'tempo', meaning: 'how fast', said: [], used: 0 },
+      { term: 'echo', meaning: 'm', said: [], used: 0 },
+    ]);
+    expect(sanitizeCollection({ term: 'x' })).toEqual([]);
+  });
+});
+
+describe('sanitizeLearntTerms', () => {
+  it('accepts a missing list, rejects a non-list, and cleans and caps the terms', () => {
+    expect(sanitizeLearntTerms(undefined)).toEqual([]);
+    expect(sanitizeLearntTerms('swing')).toBeNull();
+    expect(sanitizeLearntTerms(['swing', 3, ' ', 'x\u0000y', 'z'.repeat(99)])).toEqual(['swing', 'x y', 'z'.repeat(32)]);
+    expect(sanitizeLearntTerms(Array(99).fill('t'))).toHaveLength(MAX_LEARNT_SENT);
   });
 });

@@ -134,6 +134,13 @@ describe('POST /api/compose: success', () => {
     expect(calls[0]!.betas).toBeUndefined();
   });
 
+  it('passes the learnt words to Claude, and rejects a learnt list that is not a list', async () => {
+    const { post, calls } = setup();
+    expect((await post({ ...ask, learnt: ['swing', 'off beat'] })).status).toBe(200);
+    expect(JSON.stringify(calls[0]!.messages)).toContain('already learnt: swing, off beat');
+    expect((await post({ ...ask, learnt: 'swing' })).status).toBe(400);
+  });
+
   it('returns no words when the reply has none', async () => {
     const { post } = setup({ reply: message({ text: JSON.stringify({ reply: 'ok', piece: GOOD_REPLY.piece }) }) });
     expect(((await (await post(ask)).json()) as { words: unknown }).words).toEqual([]);

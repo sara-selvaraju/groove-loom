@@ -62,6 +62,44 @@ test('asks for the invite code, then adds a layer from the AI reply', async ({ p
   await expect(page.locator('.msg.loom .words dd')).toHaveText('hits land between the main beats');
 });
 
+test('your words collect across requests, notice when you use them, and outlast Clear chat', async ({ page }) => {
+  const sent: unknown[] = [];
+  await aiOn(page, (body) => {
+    sent.push(body.learnt);
+    const first = sent.length === 1;
+    const words = first ? [{ said: 'groovier', term: 'swing', meaning: 'every second note lands a little late' }] : [];
+    return { status: 200, json: { reply: first ? 'Swung it.' : 'More swing.', words, piece: body.piece } };
+  });
+  await page.addInitScript(() => localStorage.setItem('gl.invite', 'open-sesame'));
+  await page.goto('/');
+  await expect(page.locator('#wordsOpen')).toHaveText('Your words');
+
+  await page.fill('#prompt', 'make it groovier');
+  await page.press('#prompt', 'Enter');
+  await expect(page.locator('#wordsOpen')).toHaveText('Your words (1)');
+
+  await page.fill('#prompt', 'a bit more swing please');
+  await page.press('#prompt', 'Enter');
+  await expect(page.locator('.msg.loom').last()).toContainText('More swing.');
+  expect(sent).toEqual([[], ['swing']]); // the AI is told what the person has learnt
+
+  await page.click('#clearChat');
+  await page.reload();
+  await page.click('#wordsOpen');
+  const item = page.locator('#wordsList li');
+  await expect(item).toHaveCount(1);
+  await expect(item.locator('.term')).toHaveText('swing');
+  await expect(item.locator('.used')).toHaveText('✓ you used it');
+  await expect(item.locator('.from')).toHaveText('From your words: “groovier”');
+
+  page.once('dialog', (d) => void d.accept());
+  await page.click('#wordsForget');
+  await expect(item).toHaveCount(0);
+  await expect(page.locator('#wordsEmpty')).toBeVisible();
+  await page.click('#wordsClose');
+  await expect(page.locator('#wordsOpen')).toHaveText('Your words');
+});
+
 test('a wrong invite code is forgotten and the form comes back', async ({ page }) => {
   await aiOn(page, () => ({ status: 401, json: { error: 'forbidden' } }));
   await page.goto('/');

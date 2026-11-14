@@ -55,6 +55,13 @@ describe('prompt split for caching', () => {
     expect(req.endsWith("Person's new request: add a flute")).toBe(true);
   });
 
+  it('lists the words the person has learnt, and which they used, in the per-request part only', () => {
+    const req = buildRequest('add more swing', piece, [], ['swing', 'off beat']);
+    expect(req).toContain('Music words this person has already learnt: swing, off beat. They used these themselves in this request: swing.');
+    expect(buildRequest('add drums', piece, [], ['swing'])).not.toContain('used these themselves');
+    expect(buildRequest('add drums', piece, [])).not.toContain('already learnt:');
+  });
+
   it('says when the piece is full, and only then', () => {
     const full = { ...piece, layers: Array.from({ length: 8 }, (_, i) => ({ ...piece.layers[0]!, id: `k${i}` })) };
     expect(buildRequest('add piano', full, [])).toContain('already has 8 layers, the most it can hold');

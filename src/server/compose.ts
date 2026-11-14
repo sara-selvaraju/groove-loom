@@ -8,7 +8,7 @@ import type { Context, Hono } from 'hono';
 import { bodyLimit } from 'hono/body-limit';
 import { COMPOSE_SCHEMA } from '../shared/compose-schema.js';
 import { cleanText, droppedLayers, droppedNote, sanitizePiece, type Piece } from '../shared/piece.js';
-import { sanitizeWords } from '../shared/learning.js';
+import { sanitizeLearntTerms, sanitizeWords } from '../shared/learning.js';
 import { INSTRUCTIONS, buildRequest, type ChatMessage } from '../shared/prompt.js';
 import { INVITE_GUESS_LIMITS, Limiter } from './limiter.js';
 import { parsesAsMini } from './mini.js';
@@ -123,7 +123,8 @@ export function mountCompose(app: Hono, options: ComposeOptions): void {
     const request = typeof body?.request === 'string' ? cleanText(body.request, MAX_REQUEST_CHARS).trim() : '';
     const piece = sanitizePiece(body?.piece, null, parsesAsMini);
     const history = readHistory(body?.history);
-    if (!request || !piece || !history) {
+    const learnt = sanitizeLearntTerms(body?.learnt);
+    if (!request || !piece || !history || !learnt) {
       done(400);
       return fail(c, 400, 'bad_request');
     }
@@ -143,7 +144,7 @@ export function mountCompose(app: Hono, options: ComposeOptions): void {
           max_tokens: MAX_OUTPUT_TOKENS,
           // The fixed instructions are cached between requests; only the piece and request vary.
           system: [{ type: 'text', text: INSTRUCTIONS, cache_control: { type: 'ephemeral' } }],
-          messages: [{ role: 'user', content: buildRequest(request, piece, history) }],
+          messages: [{ role: 'user', content: buildRequest(request, piece, history, learnt) }],
           output_config: { effort: 'low', format: { type: 'json_schema', schema: COMPOSE_SCHEMA } },
           ...(FALLBACK_MODELS.has(model) ? { betas: ['server-side-fallback-2026-07-01'], fallbacks: 'default' as const } : {}),
         },
