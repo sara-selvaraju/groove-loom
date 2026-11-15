@@ -38,6 +38,8 @@ export interface ComposeOptions {
   /** Null when no invite code is configured: the AI is off. */
   inviteCode: string | null;
   model?: string;
+  /** The fixed instructions sent as the system prompt; the eval swaps in other versions. */
+  instructions?: string;
   limiter?: Limiter;
   /** Counts wrong invite codes per visitor, so the code cannot be guessed by trying many. */
   guesses?: Limiter;
@@ -143,7 +145,7 @@ export function mountCompose(app: Hono, options: ComposeOptions): void {
           model,
           max_tokens: MAX_OUTPUT_TOKENS,
           // The fixed instructions are cached between requests; only the piece and request vary.
-          system: [{ type: 'text', text: INSTRUCTIONS, cache_control: { type: 'ephemeral' } }],
+          system: [{ type: 'text', text: options.instructions ?? INSTRUCTIONS, cache_control: { type: 'ephemeral' } }],
           messages: [{ role: 'user', content: buildRequest(request, piece, history, learnt) }],
           output_config: { effort: 'low', format: { type: 'json_schema', schema: COMPOSE_SCHEMA } },
           ...(FALLBACK_MODELS.has(model) ? { betas: ['server-side-fallback-2026-07-01'], fallbacks: 'default' as const } : {}),
