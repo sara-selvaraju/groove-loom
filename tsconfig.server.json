@@ -16,5 +16,5 @@
     "skipLibCheck": true,
     "noEmit": true
   },
-  "include": ["src/server", "src/shared", "e2e", "scripts", "*.config.ts", ".railway"]
+  "include": ["src/server", "src/shared", "e2e", "eval", "scripts", "*.config.ts", ".railway"]
 }
