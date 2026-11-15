@@ -1,6 +1,6 @@
 {
   "name": "groove-loom",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
   "description": "Describe music in plain words and watch a loom weave it into a tapestry.",
   "license": "AGPL-3.0-only",
